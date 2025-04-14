@@ -2,11 +2,11 @@
     \namedinferrule{f-eps}
     { }
     {\First{g}{\PEmpty}{cs}{true}{cs}}
-    
+
     \namedinferrule{f-set}
     { }
     {\First{g}{\PSet{cs'}}{cs}{false}{cs'}}
-    
+
     \namedinferrule{f-seq-false}
     {\Nullable{g}{p_1}{false} \\ \First{g}{p_1}{\Sigma}{b}{cs'}}
     {\First{g}{\PSequence{p_1}{p_2}}{cs}{b}{cs'}}

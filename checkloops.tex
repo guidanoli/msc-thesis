@@ -26,7 +26,7 @@
     \namedinferrule{cl-rep-nullable}
     {\Nullable{g}{p}{d}{\Some true}}
     {\CheckLoops{g}{\PRepetition{p}}{d}{\Some true}}
-    
+
     \namedinferrule{cl-rep-non-nullable}
     {\Nullable{g}{p}{d}{\Some false} \\ \CheckLoops{g}{p}{d}{res}}
     {\CheckLoops{g}{\PRepetition{p}}{d}{res}}
@@ -34,11 +34,11 @@
     \namedinferrule{cl-seq-none-1}
     {\CheckLoops{g}{p_1}{d}{\None}}
     {\CheckLoops{g}{\PSequence{p_1}{p_2}}{d}{\None}}
-    
+
     \namedinferrule{cl-seq-none-2}
     {\CheckLoops{g}{p_2}{d}{\None}}
     {\CheckLoops{g}{\PSequence{p_1}{p_2}}{d}{\None}}
-    
+
     \namedinferrule{cl-seq-some}
     {\CheckLoops{g}{p_1}{d}{\Some b_1} \\ \CheckLoops{g}{p_2}{d}{\Some b_2}}
     {\CheckLoops{g}{\PSequence{p_1}{p_2}}{d}{\Some (b_1 \vee b_2)}}
@@ -46,11 +46,11 @@
     \namedinferrule{cl-choice-none-1}
     {\CheckLoops{g}{p_1}{d}{\None}}
     {\CheckLoops{g}{\PChoice{p_1}{p_2}}{d}{\None}}
-    
+
     \namedinferrule{cl-choice-none-2}
     {\CheckLoops{g}{p_2}{d}{\None}}
     {\CheckLoops{g}{\PChoice{p_1}{p_2}}{d}{\None}}
-    
+
     \namedinferrule{cl-choice-some}
     {\CheckLoops{g}{p_1}{d}{\Some b_1} \\ \CheckLoops{g}{p_2}{d}{\Some b_2}}
     {\CheckLoops{g}{\PChoice{p_1}{p_2}}{d}{\Some (b_1 \vee b_2)}}

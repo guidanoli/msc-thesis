@@ -1,4 +1,4 @@
-% atbeginend.sty 
+% atbeginend.sty
 %
 % defines
 % \BeforeBegin{environment}{code-to-execute}
@@ -31,7 +31,7 @@
 		\BeginEnvironment{#1}%
 	% and execute code after \begin{environment}
 		\csname AfterBeg#1\endcsname%
-	% 
+	%
 	\let\SaveBegEng=\NullCom%
 \fi%
 \SaveBegEng{#1}%
