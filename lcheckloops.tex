@@ -1,0 +1,9 @@
+\begin{mathpar}
+    \namedinferrule{lcl-nil}
+    { }
+    {\lCheckLoops{g}{nil}{false}}
+
+    \namedinferrule{lcl-cons}
+    {\CheckLoops{g}{r}{d}{\Some b_1} \\ \lCheckLoops{g}{rs}{b_2}}
+    {\lCheckLoops{g}{r::rs}{b_1 \vee b_2}}
+\end{mathpar}

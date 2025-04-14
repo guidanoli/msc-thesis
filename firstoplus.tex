@@ -1,0 +1,10 @@
+\begin{align*}
+    \begin{aligned}[t]
+        & res_1 \oplus res_2 = \\
+        & \matchwith{res_1, res_2} \\
+        & \matchcase{\Some (b_1, first_1), \Some (b_2, first_2)}
+                    {\Some (b_1 \vee b_2, \SetUnion{first_1}{first_2})} \\
+        & \matchcase{otherwise}{\None} \\
+        & \matchend{}
+    \end{aligned}
+\end{align*}

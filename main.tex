@@ -1,0 +1,186 @@
+%% -*- coding: utf-8; -*-
+% Use a opção 'digital' para ativar o retorno de referências. Essa função é indicada para a versão digital do documento
+%\documentclass[phd,american]{thesispuc}%english thesis
+\documentclass[msc,american]{thesispuc}%english dissertation
+% \documentclass[phd,brazilian,digital]{thesispuc}%tese em portugês
+% \documentclass[msc,brazilian]{thesispuc}%disseretação em portuguŝ
+
+\input{packages}
+\input{macros}
+\input{theoremsdef}
+
+% Line numbers (for reviewing)
+% \linenumbers
+% \linenumberdisplaymath
+
+% numprint 
+\npthousandsep{.}
+\npdecimalsign{,}
+
+%% ThesisPUC option
+\tablesmode{none} %% [none, fig, tab ou figtab]
+\algorithmsmode{none} %% [none ou use] %% Default is [use]
+\codesmode{none} %% [none ou use] %% Default is [use]
+\abreviationsmode{none} %% [none ou use] %% Default is [use]
+
+%%%
+%%% Counters
+%%%
+
+%% uncomment and change for other depth values
+\setcounter{tocdepth}{1}
+%\setcounter{lofdepth}{3}
+%\setcounter{lotdepth}{3}
+%\setcounter{secnumdepth}{3}
+
+%%%
+%%% Misc.
+%%%
+
+\usecolour{true}
+
+
+%%%
+%%% Titulos
+%%%
+
+\author{Guilherme Dantas de Oliveira}
+\authorR{Dantas de Oliveira, Guilherme} % É necessário colocar o nome completo Sobrenomes, Nomes
+
+\advisor{Roberto Ierusalimschy}{} %Name LastName
+\advisorR{Ierusalimschy, Roberto} %LastName, Name
+% Se o orientado for de uma instituição diferente, descomente a linh abaixo e defina a instituição
+%\advisorInst{institution name}{acronym}
+
+%\coadvisor{Otávio da Fonseca Martins Gomes}{Dr.}
+%\coadvisorR{da Fonseca Martins Gomes, Otávio}
+%\coadvisorInst{Centro de Tecnologia Mineral}{CETEM/MCTI}
+
+%\coadvisor{Otávio da Fonseca Martins Gomes}{Dr.}
+%\coadvisorR{da Fonseca Martins Gomes, Otávio}
+%\coadvisorInst{Centro de Tecnologia Mineral}{CETEM/MCTI}
+
+\title{Formalização de Algoritmos-Chave de \lpeg{}} %Título em portugês
+
+\titleuk{Formalization of Key Algorithms from \lpeg{}} %Título em Inglês
+
+%%\subtitulo{Aqui vai o subtitulo caso precise}
+
+\day{7}
+\month{April}
+\year{2025}
+
+\city{Rio de Janeiro}
+\CDD{004}
+\department{Informática}
+\program{Informática}
+\school{Pós-Graduação em Informática}
+\university{Pontifícia Universidade Católica do Rio de Janeiro}
+\uni{PUC-Rio}
+
+
+%%%
+%%% Banca
+%%%
+
+\jury{%
+  \jurymember{Sérgio Queiroz de Medeiros}{}
+    {Escola de Ciências e Tecnologia}{UFRN}
+  \jurymember{Hugo Musso Gualandi}{}
+    {Instituto de Computação}{UFRJ}
+  % \jurymember{Noemi Rodriguez}{Profa.}
+  %   {Departamento de Informática}{PUC-Rio}
+}
+
+
+%%%
+%%% Resumo Pessoal
+%%%
+
+\resume{%
+% Se o seu resumo ocupar menos de uma linha, utilize o seguinte comando para manter o texto justificado:
+% \makebox[\textwidth][s]{Graduado em ciência da computação pela Universidade de Harvard.}
+% Coso contrário, apenas digite seu resumo normalmente
+    \makebox[\textwidth][s]{Bacharel em Engenharia da Computação pela PUC-Rio.}
+}
+
+%%%
+%%% Agradecimentos
+%%%
+% Se você recebeu bolsa de insenção PUC ou bolsa CAPES você deve manter a frase abaixo em seus agradecimentos
+\acknowledgment{%
+\noindent To my advisor Professor Roberto Ierusalimschy for the incentive and partnership
+to carry out this work.
+\bigskip
+
+\noindent To PUC-Rio, for the aids granted, without which this work
+could not have been accomplished.
+}
+
+
+%%%
+%%% Palavra chave do católogo bibliografico
+%%%
+
+\catalogprekeywords{%
+  \catalogprekey{Informática}%
+}
+
+%%%
+%%% Palavras chave do trabalho - Não adicione % no final da linha da definão do /key
+%%%
+
+\keywords{%
+  \key{Gramáticas de Análise Sintática de Expressão}
+  \key{Bem-formação}
+  \key{LPeg}
+}
+
+\keywordsuk{%
+  \key{Parsing Expression Grammars}
+  \key{Well-formedness}
+  \key{LPeg}
+}
+
+%%%
+%%% Resumo e Resumo em Inglês
+%%%
+
+\abstract{%
+    \input{abstractbr}
+}
+
+\abstractuk{%
+    \input{abstract}
+}
+
+%%%
+%%% Dedicatória
+%%%
+
+% \dedication{%
+%   Aos meus pais, irmãos e família\\
+% pelo apoio e encorajamento.
+% }
+
+%%%
+%%% Epigrafo
+%%%
+
+% \epigraph{%
+%   My beautifull epigraph
+% }
+% \epigraphauthor{Wassily Kandinsky}
+% \epigraphbook{Regards sur le passé}
+
+\begin{document}
+    \input{chapters/introduction}
+    \input{chapters/syntax_and_semantics}
+    \input{chapters/algorithm/main}
+    \input{chapters/optimizations/main}
+    \input{chapters/related_work}
+    \input{chapters/conclusion}
+    \arial
+    \bibliographystyle{abnt-num} % \bibliographystyle{abnt-num}
+    \bibliography{references}
+\end{document}

@@ -1,0 +1,266 @@
+\section{Building intuition}
+
+Before we formally define the algorithm,
+we would like to first develop some intuition
+for the function signature.
+We start with an informal definition:
+the function receives a pattern
+and returns the set of first characters that
+can be accepted by the pattern.
+Let us try to informally define the first-set
+of some simple patterns
+using this initial signature.
+
+\newcommand{\firsta}[1]{\firstname{}(#1)}
+
+Starting with $\PEmpty$ and $\PRepetition{p}$,
+we know both patterns accept every input string,
+so it makes sense for this function to return
+the full character set, which we represent as $\Sigma$.
+As for the character set pattern $\PSet{cs}$,
+we know that it only accepts strings that start with
+a character in the set $\Set{cs}$.
+\begin{align*}
+    \firsta{\PEmpty} &= \Sigma \\
+    \firsta{\PRepetition{p}} &= \Sigma \\
+    \firsta{\PSet{cs}} &= \Set{cs}
+\end{align*}
+
+However, when we try to define the first-set of sequence patterns,
+we run into some issues.
+To better comprehend them,
+it can be helpful to mentally compute the first-set of
+some simple sequences,
+using the pattern types for which
+we have defined the function so far.
+This may give us some intuition as to how the first-set
+of sequences may be derived from its sub-patterns.
+It is worth highlighting that these definitions
+are informal and derived purely from intuition.
+The actual formal definitions
+are presented later in this chapter.
+\begin{align*}
+    \firsta{\PSequence{\PEmpty}{\PEmpty}} &= \Sigma \\
+    \firsta{\PSequence{\PSet{cs_1}}{\PEmpty}} &= \Set{cs_1} \\
+    \firsta{\PSequence{\PEmpty}{\PSet{cs_2}}} &= \Set{cs_2} \\
+    \firsta{\PSequence{\PSet{cs_1}}{\PSet{cs_2}}} &= \Set{cs_1} \\
+    \firsta{\PSequence{\PSet{cs_1}}{\PRepetition{\PSet{cs_2}}}} &= \Set{cs_1} \\
+    \firsta{\PSequence{\PRepetition{\PSet{cs_1}}}{\PEmpty}} &= \Sigma \\
+    \firsta{\PSequence{\PRepetition{\PSet{cs_1}}}{\PSet{cs_2}}} &=
+    \SetUnion{\Set{cs_1}}{\Set{cs_2}} \\
+    \firsta{\PSequence{\PRepetition{\PSet{cs_1}}}{\PRepetition{\PSet{cs_2}}}} &=
+    \Sigma
+\end{align*}
+
+From the examples above,
+we can observe that when $p_1$ is non-nullable,
+the first-set of $p_2$ doesn't seem to be relevant
+to the first-set of the sequence.
+That is because $p_1$, being non-nullable,
+is guaranteed to consume a character.
+As a result, $p_2$ is given a proper suffix of the original string,
+which doesn't contain its first character.
+Based on this observation,
+we can define the function
+for sequences $\PSequence{p_1}{p_2}$
+where $p_1$ is non-nullable
+as the first-set of $p_1$.
+\begin{align*}
+    \firsta{\PSequence{p_1}{p_2}} &= \begin{cases}
+        \firsta{p_1} & \text{if $p_1$ is non-nullable} \\
+        \dots ? & \text{if $p_1$ is nullable}
+    \end{cases}
+\end{align*}
+
+We still need to define the function
+for the case where $p_1$ is nullable.
+From the patterns we have defined so far,
+only the empty pattern $\PEmpty$ and
+the repetition pattern $\PRepetition{\PSet{cs_1}}$ are nullable.
+Let us see their behavior in sequence with
+the character set pattern $\PSet{cs_2}$.
+\begin{align*}
+    \firsta{\PSequence{\PEmpty}{\PSet{cs_2}}} &= \Set{cs_2} \\
+    \firsta{\PSequence{\PRepetition{\PSet{cs_1}}}{\PSet{cs_2}}} &= \SetUnion{\Set{cs_1}}{\Set{cs_2}}
+\end{align*}
+
+Note that, when alone, their first-sets are equal.
+However, when in sequence with the same pattern,
+the resulting first-sets differ.
+This discrepancy indicates that we cannot define
+$\firsta{\PSequence{p_1}{p_2}}$ as a pure function
+of $\firsta{p_1}$ and $\firsta{p_2}$.
+Instead, we would have to break the definition down
+for each case of $p_1$.
+\begin{align*}
+    \firsta{\PSequence{\PEmpty}{p_2}} &= \firsta{p_2} \\
+    \firsta{\PSequence{\PRepetition{p}}{p_2}} &=
+    \SetUnion{\firsta{p}}{\firsta{p_2}} \\
+    & \dots
+\end{align*}
+
+With this signature,
+we would have to define the function for
+every nullable pattern twice:
+one when alone, and another when followed by another pattern.
+However, we would like to define the function recursively
+only once for each pattern type.
+
+\newcommand{\firstb}[2]{\firstname{}(#1, #2)}
+
+To solve this issue, \lpeg{} adds an accumulator parameter
+for the first-set of the following pattern in the sequence.
+When the pattern is not followed by a pattern,
+\lpeg{} uses the full character set as the accumulator.
+We call this accumulator the \emph{follow-set}.
+Let us adapt our definitions for this new signature:
+For each basic pattern $p_1$,
+we can derive the definition of $\firstb{p_1}{follow}$
+from the previous definition of $\firsta{\PSequence{p_1}{p_2}}$,
+and by replacing $\firsta{p_2}$ with the new parameter $follow$.
+\begin{align*}
+    \firstb{\PEmpty}{follow} &= follow \\
+    \firstb{\PRepetition{p}}{follow} &= \SetUnion{\firstb{p}{follow}}{follow} \\
+    \firstb{\PSet{cs}}{follow} &= \Set{cs}
+\end{align*}
+
+The first-set of the character set pattern $\PSet{cs}$
+does not use the follow parameter,
+because it doesn't depend on the first-set of the following pattern.
+This is because the character set pattern is non-nullable.
+We later prove this property for any non-nullable pattern.
+
+The case of the sequence pattern is interesting,
+as it demonstrates the follow-set working as an accumulator:
+In the case where $p_1$ is nullable,
+we use the first-set of $p_2$ as the follow-set of $p_1$.
+As for the case in which $p_1$ is non-nullable,
+we use the first-set of $p_1$ with any follow-set.
+We choose the full character set as the follow-set
+to demonstrate this independence from the accumulator,
+but any character set could be used.
+\begin{align*}
+    \firstb{\PSequence{p_1}{p_2}}{follow} &= \begin{cases}
+        \firstb{p_1}{\firstb{p_2}{follow}} & \text{if $p_1$ is nullable} \\
+        \firstb{p_1}{\Sigma} & \text{if $p_1$ is non-nullable}
+    \end{cases}
+\end{align*}
+
+Let us now define the first-set of the other pattern types.
+Starting with the choice pattern $\PChoice{p_1}{p_2}$,
+we intuitively define it as the union
+of the first-sets of $p_1$ and $p_2$,
+passing down the follow-set parameter to each sub-call.
+\begin{align*}
+    \firstb{\PChoice{p_1}{p_2}}{follow} &=
+    \SetUnion{\firstb{p_1}{follow}}{\firstb{p_2}{follow}}
+\end{align*}
+
+The case of the not-predicate pattern $\PNot{p}$
+highlights the conservative nature of first-sets.
+From the first-set of $p$,
+we can only infer the set of first characters that make $p$ fail,
+and, therefore, make $\PNot{p}$ succeed.
+This, however, gives us no information about
+first characters that make $p$ succeed,
+and, therefore, make $\PNot{p}$ fail.
+Therefore, in general, we cannot use the first-set of $p$
+to compute the first-set of $\PNot{p}$.
+
+There is, however, information
+that we can extract from the follow-set parameter.
+When $\PNot{p}$ is followed by a pattern $p_2$,
+the follow-set indicates which first characters make $p_2$ fail.
+Given that $\PNot{p}$ doesn't consume any input,
+these first characters also make the sequence $\PSequence{\PNot{p}}{p_2}$ fail,
+so they should be part of the first-set of $\PNot{p}$.
+Therefore, we could, in general, use the follow-set
+as the first-set of any predicate.
+However, for the specific case of $\PNot{\PSet{cs}}$,
+\lpeg{} instead computes the first-set
+of patterns as ${\SetMinus{\Sigma}{\Set{cs}}}$.
+\begin{align*}
+    \firstb{\PNot{p}}{follow} &= \begin{cases}
+        \SetMinus{\Sigma}{\Set{cs}} & \text{if $p = \PSet{cs}$} \\
+        follow & \text{otherwise}
+    \end{cases}
+\end{align*}
+
+One topic for future research is
+to investigate whether it would be possible to
+replace $\Sigma$ with the provided follow-set parameter in \lpeg{}.
+
+As for the and-predicate pattern $\PAnd{p}$,
+we use both the first-set of $p$ and the follow-set.
+That is because in order to match the sequence $\PSequence{\PAnd{p}}{p_2}$,
+the input string must match both $p$ and $p_2$.
+Conversely, if the string starts with a character that is not in the
+first-set of either pattern, the sequence fails.
+So, in this case,
+we define the first-set
+as the intersection of both sets.
+\begin{align*}
+    \firstb{\PAnd{p}}{follow} &= \SetIntersection{\firstb{p}{\Sigma}}{follow}
+\end{align*}
+
+One subtle difference between this definition
+and the actual implementation of the algorithm in \lpeg{} is
+the follow-set of $p$.
+While \lpeg{} simply passes along the follow-set parameter,
+we provide the full character set $\Sigma$.
+This change was necessary for us to prove the
+key property of first-sets in Coq.
+Future research may check whether
+passing along the follow-set parameter
+is incorrect, equivalent, or even better
+than passing $\Sigma$ as the follow-set.
+
+\newcommand{\firstc}[3]{\firstname{}(#1, #2, #3)}
+
+Finally, in order to define the case of the non-terminal pattern,
+we need to add the grammar as a parameter,
+so that we can look up the referenced grammar rule.
+In all cases, this grammar parameter is simply
+passed along to each recursive call.
+\begin{align*}
+    \firstc{g}{\PNT{i}}{follow} &= \firstc{g}{p}{follow} & \text{if $g[i] = \Some p$}
+\end{align*}
+
+This case brings up the topic of termination,
+as it does not define the recursion on
+the structure of the pattern,
+like the other cases do.
+Instead, termination in this case
+relies on the assumption
+that the input PEG is well-formed,
+and, therefore, free of left-recursive rules.
+
+On a deeper level, termination is derived from
+the way in which the well-formedness and first-set algorithms
+traverse patterns similarly.
+The most interesting case
+is that of the sequence pattern:
+when $p_1$ is non-nullable,
+both algorithms do not visit $p_2$.
+In the case of the well-formedness check,
+visiting $p_2$ is not necessary
+because the whole sequence is non-nullable,
+and any rules visited in $p_2$ would be matched
+against a proper suffix of the input string $s$
+(avoiding infinite loops).
+
+Meanwhile, in the case of the first-set algorithm,
+visiting $p_2$ can be avoided for two reasons:
+If $p_1$ is non-nullable,
+then, as we later prove, its emptiness value is $false$,
+which means that it fails the empty string.
+If $p_1$ fails the empty string,
+then so does the sequence,
+which allows the emptiness value of the sequence to also be $false$,
+regardless of the emptiness value of $p_2$.
+The second reason is that, if $p_1$ is non-nullable,
+then its first-set is independent of the follow-set parameter,
+which, in the general case, would be the first-set of $p_2$.
+Therefore, when $p_1$ is non-nullable,
+we can provide any follow-set parameter, such as $\Sigma$,
+in order to avoid making a recursive call to $p_2$.

@@ -1,0 +1,52 @@
+%%%
+%%% Additional Packages
+%%%
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{multicol}
+\usepackage{colortbl}
+\usepackage[%
+    dvipsnames,
+    svgnames,
+    x11names,
+    table
+]{xcolor}
+\usepackage{numprint}
+\usepackage{textcomp}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{enumitem}
+\usepackage{amssymb}
+% Estilo de citação ABNT, O estilo atual está dinido como ordem e citação alfabetica, se você precisar
+% trocar a ordenação por ordem de citação, modifique na linha abaixo álf'para 'num' e também no fim dá página
+% troque bibliographystyle pela versão comentada ao lado.
+\usepackage[num,bibjustif,abnt-emphasize=bf]{abntex2cite}
+%\usepackage[linesnumbered, ruled, vlined]{algorithm2e}
+%\usepackage{pgfplots,pgfplotstable} 
+%\usepackage{array}
+
+\usepackage{graphicx}
+% \usepackage[a4paper, margin=2cm]{geometry}
+
+\usepackage{hyperref} % links
+% \usepackage{amsmath} % math utilities
+% \usepackage{amssymb} % math symbols
+\usepackage{amsthm} % theorems and lemmas
+\usepackage{mathpartir} % type inference rules
+\usepackage{cleveref} % clever referencing
+\usepackage{lineno} % line numbers (good for reviewing)
+\usepackage{stmaryrd} % double square brackets
+% \usepackage{authblk} % author and affiliation blocks
+% \usepackage[numbers]{natbib} % numeric references
+
+\usepackage{mathtools}
+\usepackage{listings}
+
+\lstdefinestyle{myLuaStyle}
+{
+  language = {[5.2]Lua},
+  frame = none,
+  commentstyle = \color{blue},
+}
+
+\lstset{style=myLuaStyle}

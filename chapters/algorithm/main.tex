@@ -1,0 +1,181 @@
+\chapter{Well-formedness Algorithm}
+\label{chapter:wf-algorithm}
+
+In this chapter,
+we present the well-formedness algorithm
+implemented in \lpeg{}
+and prove its correctness.
+We start with the overall structure
+of the algorithm.
+\Cref{fig:verifygrammar-function}
+displays the function that implements the algorithm,
+which can be seen as a sequence of four steps,
+each of which we will get into later.
+\begin{figure}
+    \centering
+    \input{verifygrammarcomp}
+    \caption{The well-formedness function with gas.}
+    \label{fig:verifygrammar-function}
+\end{figure}
+The function \textit{\verifygrammarname{}}
+takes a grammar and some gas as parameters,
+and returns an optional Boolean value.
+The gas counter serves merely to convince Coq
+that the function terminates for any input.
+If this counter ever reaches zero,
+the function returns $\None$.
+Otherwise, it returns $\Some b$,
+where the Boolean value $b$
+indicates whether the grammar
+is well-formed or not.
+
+We prove that,
+for any input grammar $g$,
+there exists a lower bound for the gas counter
+for which \textit{\verifygrammarname{}} returns $\Some b$.
+We do not need to assume anything
+about the grammar, because the function
+performs all the necessary checks
+in the correct order.
+This works as a proof of termination
+for the algorithm.
+\begin{lemma}
+    \label{lemma:verifygrammar-termination}
+    $\forall gas \ge \verifygrammargas{g}$,
+    $\exists b\ \verifygrammarcomp{g}{gas} = \Some b$.
+\end{lemma}
+
+We define this lower bound
+in \Cref{fig:verifygrammargas}.
+\begin{figure}
+    \centering
+    \input{verifygrammargas}
+    \caption{The well-formedness function gas lower bound.}
+    \label{fig:verifygrammargas}
+\end{figure}
+The function takes into account
+$\length{g}$, the number of rules in the grammar,
+and $\size{g}$, the size of the grammar.
+We define the size of a pattern $p$, also denoted as $\size{p}$,
+as the number of nodes in its abstract syntax tree,
+and the size of a grammar $g$
+as the summation of the sizes of its rules,
+that is, $\sum_{r \in g} \size{r}$.
+
+With this lower bound,
+we can define the function \textit{wf},
+which takes a grammar $g$ and returns a Boolean value
+indicating whether $g$ is well-formed.
+\Cref{fig:wf} displays the implementation
+of the function \textit{wf}.
+It basically calls \textit{\verifygrammarname{}}
+with $\verifygrammargas{g}$ as the gas counter.
+If it returns $\Some b$, we simply return $b$.
+Otherwise, we return $true$.
+This default value is irrelevant,
+because this case cannot happen.
+Nevertheless, we return $true$
+to demonstrate that the function
+and gas estimation are correct.
+
+\begin{figure}
+    \centering
+    \input{wf}
+    \caption{The well-formedness function.}
+    \label{fig:wf}
+\end{figure}
+
+Now that we have defined \textit{wf},
+let us get into \textit{\verifygrammarname{}}.
+In \Cref{fig:verifygrammar-function},
+the reader may observe that
+it calls four functions that we have not defined yet.
+The first two functions,
+\textit{\coherentname{}} and \textit{\lcoherentname{}},
+do not use the gas counter,
+because they operate recursively on the structure of patterns
+and lists of patterns, respectively.
+This type of structural recursion is enough for Coq
+to determine that these functions terminate.
+Meanwhile, the last two functions,
+\textit{\lverifyrulename{}} and \textit{\lcheckloopsname{}},
+need to visit rules recursively,
+and are, therefore, defined recursively on a gas parameter.
+Just like we did for
+the \textit{\verifygrammarname{}} function,
+we also prove that \textit{\lverifyrulename{}} and \textit{\lcheckloopsname{}}
+terminate by providing a lower bound for the gas parameter.
+(Without these proofs,
+we would not be able to prove the termination
+of \textit{\verifygrammarname{}}.)
+
+Regarding the implementation of these functions,
+we will get into each of them in the following sections.
+For now, we will briefly explain what each of them does.
+The first two steps are relatively simple,
+while the third and fourth steps are more complex,
+as they involve symbolically parsing each rule.
+
+The first step of the algorithm is trivial.
+It merely ensures that $\PNT{0}$,
+the first rule of the grammar,
+is defined,
+given that it is used as the starting point
+for parsing the grammar.
+We implement this step with the function
+\textit{\coherentname{}},
+which takes a grammar $g$ and a pattern $p$
+and returns a Boolean value
+that indicates whether $p$ only references rules
+that exist in $g$.
+
+The second step is similar to the first one,
+as it makes sure that every rule in the grammar
+only references rules that exist in the grammar.
+This ensures that we can safely
+dereference any nonterminal patterns later on.
+This step is implemented by the function \textit{\lcoherentname{}},
+which is an extended version of \textit{\coherentname{}}
+for lists of patterns.
+
+The third step
+ensures that the grammar contains no
+left-recursive rules.
+It does so by symbolically executing the parsing routine
+for each rule in the grammar
+and checking whether it can reach the same rule twice
+without consuming any input.
+This step is implemented by the function \textit{\lverifyrulename{}},
+which takes a grammar $g$, a list of rules $rs$, and a gas counter
+and returns an optional Boolean value
+indicating whether all rules in the list $rs$
+are not left-recursive.
+
+The fourth and final step
+looks for any degenerate loops,
+which are repetitions of patterns
+that may match while consuming no input.
+This step is implemented by the function \textit{\lcheckloopsname{}},
+and uses a simpler version
+of the algorithm from the previous step.
+It takes a grammar $g$, a list of rules $rs$, and a gas counter
+and returns an optional Boolean value
+indicating whether all rules in the list $rs$
+are free of degenerate loops.
+
+If a grammar passes all these checks,
+then it is considered well-formed.
+In the following sections,
+we go into each of these steps
+in greater detail.
+We also define equivalent inductive predicates
+for each step and for the \textit{\verifygrammarname{}} function,
+to aid us in the proofs.
+We also prove these predicates
+follow the corresponding fixed-point definitions.
+
+\input{chapters/algorithm/coherent}
+\input{chapters/algorithm/verifyrule}
+\input{chapters/algorithm/nullable}
+\input{chapters/algorithm/checkloops}
+\input{chapters/algorithm/correctness}

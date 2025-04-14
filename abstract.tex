@@ -1,0 +1,25 @@
+Parsing Expression Grammars (PEGs)
+are a class of deterministic formal grammars
+originally described by Ford.
+They are widely used to describe and parse machine-oriented languages
+and have been implemented by several projects.
+One such project is \lpeg{},
+a Lua library that compiles PEGs into optimized code
+that is run by a specialized virtual machine.
+
+The implementation of \lpeg{} features two key algorithms
+that have never been published or verified before.
+First, \lpeg{} has its own implementation of
+the well-formedness check introduced by Ford,
+which is crucial for ensuring that parsing terminates.
+Second, \lpeg{} implements an algorithm
+that computes the set of first characters
+that may be accepted by a pattern,
+which it uses to optimize
+the virtual-machine code for certain patterns.
+
+This work formalizes these algorithms
+and proves their correctness
+using the Coq proof assistant.
+We also prove their termination
+using a gas-based approach.

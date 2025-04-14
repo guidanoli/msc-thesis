@@ -1,0 +1,8 @@
+\begin{equation*}
+    \lcoherentfunc{g}{rs} = \begin{aligned}[t]
+        & \matchwith{rs} \\
+        & \matchcase{nil}{true} \\
+        & \matchcase{r::rs'}{\coherentfunc{g}{r} \wedge \lcoherentfunc{g}{rs'}} \\
+        & \matchend{}
+    \end{aligned}
+\end{equation*}

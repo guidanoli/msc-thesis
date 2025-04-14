@@ -1,0 +1,238 @@
+\section{Degenerate loops}
+
+After making sure that
+all rules are coherent,
+and that the grammar is free of left-recursive rules,
+the next step is to look for degenerate loops,
+which are repetition patterns $\PRepetition{p}$
+where $p$ is nullable.
+To detect nullable patterns,
+we use the algorithm from
+\Cref{section:nullable}.
+
+\Cref{fig:checkloops-function}
+defines this step of the verification process
+as a fixed-point,
+which takes a grammar,
+a pattern,
+a stack depth limit,
+and a gas counter,
+and returns an optional label.
+Possible return values are
+$\None$ (out-of-gas),
+$\Some \None$ (stack overflow),
+$\Some \Some true$ (degenerate),
+and $\Some \Some false$ (non-degenerate).
+
+This fixed-point does not visit rules
+referenced by nonterminal patterns.
+Instead, each rule is checked separately.
+In this case, the stack depth limit parameter
+is simply passed down on to the function that
+checks whether a pattern is nullable or not.
+However, as we've discussed in \Cref{section:nullable},
+actual implementations can safely drop this parameter,
+given that the grammar has been checked
+for left-recursive rules already.
+
+\begin{figure}
+    \centering
+    \input{checkloopscomp}
+    \caption{The degenerate loop detection function.}
+    \label{fig:checkloops-function}
+\end{figure}
+
+Just as with the other gas-based functions,
+we would like to prove that this function
+converges with respect to the gas counter.
+\Cref{lemma:checkloops-gas-convergence}
+states that, if this function returns some label,
+then increasing the gas counter
+won't change the label being returned.
+
+\begin{lemma}%[Check Loops Gas Convergence]
+    If $\checkloopscomp{g}{p}{d}{gas} = \Some res$, \\
+    then, $\forall gas' \ge gas$,
+    $\checkloopscomp{g}{p}{d}{gas'} = \Some res$.
+    \label{lemma:checkloops-gas-convergence}
+\end{lemma}
+
+Moreover, \Cref{lemma:checkloops-termination}
+states that, for any coherent pattern and grammar,
+there exists a lower bound for the gas parameter,
+for which the function returns some result.
+
+\begin{lemma}%[Check Loops Termination]
+    If $\Coherent{g}{p}{true}$,
+    and $\lCoherent{g}{g}{true}$, \\
+    and $gas \ge \size{p} + d \cdot \size{g}$,
+    then $\exists res\ \checkloopscomp{g}{p}{d}{gas} = \Some res$.
+    \label{lemma:checkloops-termination}
+\end{lemma}
+
+We would also like to prove that
+this function converges with
+respect to the stack depth limit.
+However, in order to do that,
+it is better to work with
+an inductively-defined predicate.
+\Cref{fig:checkloops} shows
+the predicate we have defined.
+It takes a grammar,
+a pattern,
+and a stack depth limit,
+and returns an optional Boolean value.
+
+\begin{figure}
+    \centering
+    \input{checkloops}
+    \caption{The degenerate loop detection predicate.}
+    \label{fig:checkloops}
+\end{figure}
+
+As usual, we first prove
+some basic lemmas about the predicate.
+\Cref{lemma:checkloops-determinism}
+states that the predicate
+is deterministic,
+meaning that, for the same input,
+it yields the same output.
+
+\begin{lemma}
+    If $\CheckLoops{g}{p}{d}{res_1}$,
+    and $\CheckLoops{g}{p}{d}{res_2}$,
+    then $res_1 = res_2$.
+    \label{lemma:checkloops-determinism}
+\end{lemma}
+
+\Cref{lemma:checkloops-follows}
+states that every result returned by the function
+can be constructed using the predicate.
+We therefore say the predicate follows
+the function.
+
+\begin{lemma}
+    If $\checkloopscomp{g}{p}{d}{gas} = \Some res$,
+    then $\CheckLoops{g}{p}{d}{res}$.
+    \label{lemma:checkloops-follows}
+\end{lemma}
+
+\Cref{lemma:checkloops-d-increase-no-overflow}
+states that, if the predicate yields some result,
+then increasing the stack depth limit
+will not alter the result.
+
+\begin{lemma}%[Stack Depth Limit Increase Without Overflow]
+    If $\CheckLoops{g}{p}{d}{\Some res}$,
+    then, $\forall d' \ge d$,
+    $\CheckLoops{g}{p}{d'}{\Some res}$.
+    \label{lemma:checkloops-d-increase-no-overflow}
+\end{lemma}
+
+Finally, \Cref{lemma:checkloops-d-convergence}
+states that, for any coherent pattern and grammar
+without left-recursive rules,
+the label returned by the predicate converges
+when the stack depth limit is greater than
+the number of rules in the grammar.
+
+\begin{lemma}%[Check Loops Stack Depth Limit Convergence]
+    If $\Coherent{g}{p}{true}$,
+    and $\lCoherent{g}{g}{true}$,
+    and $\lVerifyRule{g}{g}{true}$, \\
+    and $\CheckLoops{g}{p}{d}{res}$,
+    where $d > \length{g}$,
+    then, $\forall d' \ge d, \CheckLoops{g}{p}{d'}{res}$.
+    \label{lemma:checkloops-d-convergence}
+\end{lemma}
+
+Having defined the algorithm
+that checks if a pattern contains any degenerate loops,
+we now define a function
+that performs this check for a list of patterns.
+Naturally, we will be using this
+function to check all the rules of a grammar.
+\Cref{fig:lcheckloops-function}
+displays this function,
+which takes a grammar, a list of patterns, and a gas counter,
+and returns an optional Boolean value,
+indicating whether it has found any degenerate loop.
+We pass $\length{g}+1$ as
+the stack depth limit to the underlying function.
+
+\begin{figure}
+    \centering
+    \input{lcheckloopscomp}
+    \caption{The degenerate loop detection function for lists of patterns.}
+    \label{fig:lcheckloops-function}
+\end{figure}
+
+We prove that there is a lower bound for the gas counter
+for which this function returns some result,
+assuming the grammar
+contains no incoherent or left-recursive rules,
+and that the list of patterns only
+contains coherent patterns.
+In reality, we will be calling this
+function while passing $g$ as the $rs$ parameter,
+so, in our case,
+it would suffice to state that
+$g$ contains no incoherent or left-recursive rules.
+
+\begin{lemma}%[Coherent Loops in List Termination]
+    If $\lCoherent{g}{g}{true}$,
+    and $\lCoherent{g}{rs}{true}$,
+    and $\lVerifyRule{g}{g}{true}$, \\
+    then, $\forall gas \ge \size{rs} + (\length{g} + 1) \cdot \size{g}$,
+    $\exists b\ \lcheckloopscomp{g}{rs}{gas} = \Some b$.
+\end{lemma}
+
+In order to abstract away the gas counter,
+and to help us in later induction proofs,
+we also define an equivalent inductive predicate
+for this list-based degenerate loop checker.
+\Cref{fig:lcheckloops} displays this predicate,
+which takes a grammar and a list of patterns,
+and returns a Boolean value, indicating
+whether none of the patterns in the list
+contain a degenerate loop.
+
+\begin{figure}
+    \centering
+    \input{lcheckloops}
+    \caption{The degenerate loop detection predicate for lists of patterns.}
+    \label{fig:lcheckloops}
+\end{figure}
+
+As usual, we prove some basic lemmas
+about this predicate.
+\Cref{lemma:lcheckloops-determinism}
+states that it is
+deterministic,
+and \Cref{lemma:lcheckloops-follows}
+states that it follows
+the fixed-point definition.
+
+\begin{lemma}
+    \label{lemma:lcheckloops-determinism}
+    If $\lCheckLoops{g}{rs}{b_1}$,
+    and $\lCheckLoops{g}{rs}{b_2}$,
+    then $b_1=b_2$.
+\end{lemma}
+
+\begin{lemma}
+    \label{lemma:lcheckloops-follows}
+    If $\lcheckloopscomp{g}{rs}{gas} = \Some b$,
+    then $\lCheckLoops{g}{rs}{b}$.
+\end{lemma}
+
+We also prove that if a list of patterns
+passes this list-based check,
+then each pattern in this list also
+passes the individual check.
+
+\begin{lemma}%[Check Loops in List Safety]
+    \label{lemma:lcheckloops-safety}
+    If $\lCheckLoops{g}{rs}{false}$,
+    then $\forall r \in rs, \exists d\ \CheckLoops{g}{r}{d}{\Some false}$.
+\end{lemma}

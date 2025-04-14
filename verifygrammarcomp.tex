@@ -1,0 +1,26 @@
+\begin{equation*}
+    \begin{aligned}[t]
+        & \verifygrammarcomp{g}{gas} = \\
+        & \begin{aligned}[t]
+            & \matchwith{\coherentfunc{g}{\PNT{0}}} \\
+            & \matchcase{true}{\begin{aligned}[t]
+                & \matchwith{\lcoherentfunc{g}{g}} \\
+                & \matchcase{true}{\begin{aligned}[t]
+                    & \matchwith{\lverifyrulecomp{g}{g}{gas}} \\
+                    & \matchcase{\Some true}{\begin{aligned}[t]
+                        & \matchwith{\lcheckloopscomp{g}{g}{gas}} \\
+                        & \matchcase{\Some b}{\Some \neg b} \\
+                        & \matchcase{\None}{\None} \\
+                        & \matchend{}
+                    \end{aligned}} \\
+                    & \matchcase{res}{res} \\
+                    & \matchend{}
+                \end{aligned}} \\
+                & \matchcase{false}{\Some false} \\
+                & \matchend{}
+            \end{aligned}} \\
+            & \matchcase{false}{\Some false} \\
+            & \matchend{}
+        \end{aligned}
+    \end{aligned}
+\end{equation*}

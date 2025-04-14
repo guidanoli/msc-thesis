@@ -1,0 +1,115 @@
+\chapter{First-set Algorithm}
+\label{chapter:first-set}
+
+In \Cref{chapter:wf-algorithm},
+we presented the well-formedness check
+implemented in \lpeg{},
+which ensures that the input PEG is complete.
+However, this is not the only role of this algorithm:
+It also ensures that other algorithms
+implemented in \lpeg{} terminate,
+as they traverse patterns in similar ways.
+This chapter presents one such algorithm,
+which we label as the first-set algorithm.
+
+The first-set algorithm is responsible for
+computing the set of first characters that
+can possibly be accepted by a pattern,
+and a Boolean value
+that indicates whether the pattern may
+accept the empty string.
+We call this Boolean value the
+\emph{emptiness} value of the pattern.
+The key properties of the algorithm,
+which we later prove,
+are the following:
+Any pattern fails any string that starts
+with a character that is not in the first-set
+of the pattern;
+and the pattern fails the empty string
+if its emptiness value is $false$.
+
+Both are conservative approximations,
+which means that a full first-set
+and an emptiness value of $true$ are
+the safest options, yet the least useful ones.
+That is because \lpeg{} uses this algorithm and its properties
+to optimize certain patterns in the code generation phase.
+So, ideally, we would like the first-set to be as small as possible,
+and the emptiness value of $false$ as common as possible,
+so that \lpeg{} is able to optimize code more often.
+
+One of the patterns that \lpeg{} tries to optimize
+using this algorithm is the ordered choice.
+As a base reference, we display below the code
+that \lpeg{} generates for an ordered choice $\PChoice{p_1}{p_2}$
+without any optimizations.
+\begin{align*}
+    & Choice(L_2) \\
+    & p_1 \\
+    & Commit(L_{end}) \\
+    L_2:\ & p_2 \\
+    L_{end}:\ &
+\end{align*}
+
+This unoptimized code starts with a choice instruction,
+which creates a checkpoint for the initial match state,
+so that, if $p_1$ fails,
+it is able to restore this state
+before running $p_2$.
+If, instead, $p_1$ succeeds, it runs a commit instruction,
+which deletes this checkpoint and jumps to $L_{end}$.
+
+However,
+if $p_1$ and $p_2$ have disjoint first-sets,
+and $p_1$ has an emptiness value of $false$,
+then \lpeg{} generates the following optimized code.
+\begin{align*}
+    & TestSet(first(p_1), L_2) \\
+    & p_1 \\
+    & Jump (L_{end}) \\
+    L_2:\ & p_2 \\
+    L_{end}:\ &
+\end{align*}
+
+This optimized code begins with an instruction (test set)
+that checks whether the input string starts with
+a character in the first-set of $p_1$,
+and jumps to $L_2$ if not.
+In the case where the input string is empty,
+we know that $p_1$ would fail,
+because $p_1$ has an emptiness value of $false$.
+If, otherwise, the input string starts with a character
+that is not in the first-set of $p_1$,
+then we know that $p_1$ would also fail,
+by the key property of first-sets.
+So, in either case, we know that $p_1$ would fail,
+making the choice pattern equivalent to $p_2$.
+That is why, in the case of failure,
+the test-set instruction jumps to the code of $p_2$,
+without ever running the code of $p_1$.
+
+Meanwhile, the test-set instruction succeeds
+if the input string starts with a character
+that \emph{is} in the first-set of $p_1$,
+and, therefore, is non-empty.
+In this case, because the first-sets of $p_1$ and $p_2$ are disjoint,
+we know that this character is \emph{not} in the first-set of $p_2$.
+And, from the key property of first-sets,
+this means that $p_2$ would fail,
+making the choice pattern equivalent to $p_1$.
+So, in this case, \lpeg{} simply executes the code of $p_1$.
+
+This optimization significantly improves
+the performance \lpeg{} when matching some choice patterns.
+This improvement is possible
+by replacing the costly creation/restoration/deletion of checkpoints
+with inexpensive jumps and inspections on the input string.
+
+In this chapter, we discuss the first-set algorithm
+and prove its key properties.
+
+\input{chapters/optimizations/intuition}
+\input{chapters/optimizations/emptymatchable}
+\input{chapters/optimizations/definition}
+\input{chapters/optimizations/optimization}

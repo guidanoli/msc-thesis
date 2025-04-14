@@ -1,0 +1,32 @@
+\begin{equation*}
+    \begin{aligned}[t]
+        & \lverifyrulecomp{g}{rs}{gas} := \\
+        & \begin{aligned}[t]
+            & \matchwith{rs} \\
+            & \matchcase{nil}{\Some true} \\
+            & \matchcase{r::rs'}{\begin{aligned}[t]
+                & \letin{d}{\length{g}+1} \\
+                & \matchwith{\verifyrulecomp{g}{r}{d}{false}{gas}} \\
+                & \matchcase{\Some (\Some b, k)}{\lverifyrulecomp{g}{rs'}{gas}} \\
+                & \matchcase{\Some (\None, k)}{\Some false} \\
+                & \matchcase{\None}{\None} \\
+                & \matchend{}
+            \end{aligned}} \\
+            & \matchend{}
+        \end{aligned}
+    \end{aligned}
+\end{equation*}
+
+
+% \begin{equation}
+%     \lverifyrulecomp(g,[\ ],gas) = \Some(true)
+% \end{equation}
+
+% \begin{equation}
+%     \lverifyrulecomp(g,r::rs,gas) = \begin{cases}
+%         \text{where } ores := \verifyrulecomp(g,r,1+|g|,false,gas) \\
+%         \lverifyrulecomp(g,rs,gas), \text{if } ores = \Some(\Some(b),k) \\
+%         \Some(false), \text{if } ores = \Some(\None, k) \\
+%         \None, \text{if } ores = \None
+%     \end{cases}
+% \end{equation}

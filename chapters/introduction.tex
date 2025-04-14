@@ -1,0 +1,134 @@
+\chapter{Introduction}
+
+
+% PEGs
+% LPegs
+% dentro de LPeg: well-formed (tá ótimo), first-set (descreve O ALGORITMO)
+% adapta first de CFG para PEGs (ler sobre first, e da sua importância para CFG)
+
+Parsing Expression Grammars (PEGs)
+are a type of formal grammar
+introduced by Ford~\cite{ford_parsing_2004}
+to describe and parse machine-oriented languages.
+In contrast to Context-Free Grammars (CFGs),
+established by Chomsky~\cite{chomsky_three_1956},
+PEGs are deterministic,
+which makes them particularly suitable for parsing
+programming languages and structured data formats.
+
+PEGs have been implemented by several projects
+and in a variety of programming languages.
+One such implementation is
+\lpeg{}~\cite{ierusalimschy_text_2009},
+a library for the Lua programming language.
+Following the SNOBOL tradition,
+patterns in \lpeg{} are first-class citizens
+and can be programmatically constructed in a bottom-up fashion.
+Starting from basic primitives such as character classes,
+patterns can be combined through the use of operators:
+\texttt{*}~for~sequences,
+\texttt{+}~for~ordered choices,
+\texttt{\^}~(caret)~for~repetitions,
+and so on.
+
+\lpeg{}
+features several interesting algorithms in its implementation,
+but two algorithms stand out for their complexity
+and lack of formal documentation:
+The well-formedness check
+and the first-set computation.
+
+The first algorithm, the well-formedness check,
+ensures that a pattern is complete,
+meaning it yields a match result for any input string.
+The concept of well-formedness
+was introduced by Ford
+as a conservative approximation to completeness,
+after proving that the problem of detecting completeness is undecidable,
+and noticing that incompleteness is caused by
+left-recursive rules and degenerate loops.
+
+The well-formedness algorithm proposed by Ford
+iteratively constructs a set of well-formed expressions
+until a fixed-point is reached.
+A grammar is then deemed well-formed if its expression set
+matches the set of well-formed expressions derived
+from the fixed-point iteration.
+Koprowski~et~al.~\cite{koprowski_trx_2011}
+formalized a similar algorithm
+for an extended definition of PEGs
+and proved its correctness
+using the Coq proof assistant.
+
+Meanwhile,
+the well-formedness check implemented in \lpeg{}
+does not use iteration, fixed-point checks,
+or data structures to represent sets of expressions.
+These details make the algorithm simpler to implement,
+specially in programming languages
+with modest standard libraries, such~as~C.
+Moreover,
+this alternative algorithm
+has neither been published nor formally verified yet,
+which makes it an interesting research topic.
+
+The second algorithm implemented in \lpeg{}
+that we highlight in this work is
+the first-set algorithm.
+It takes a pattern
+and returns the first-set and the emptiness value
+of the pattern.
+The definition of first-set
+is well-established in the area of CFGs,
+but their application in PEGs has not yet
+been documented in the literature.
+Basically speaking,
+the first-set of a pattern
+is the set of first characters
+that can be accepted by the pattern.
+More precisely,
+a pattern fails any string
+that starts with a character
+that is not in its first-set.
+
+The first-set algorithm also returns an emptiness value,
+which, when false, indicates that the pattern
+fails to match the empty string.
+(This Boolean value corresponds to the inclusion of
+$\varepsilon$ in the first-set of some formalizations for CFGs.)
+This other return value is necessary because
+the first-set cannot be used to determine whether
+a pattern fails the empty string,
+because it has no first character.
+Together, both return values
+help \lpeg{} optimize certain patterns,
+such as ordered choices.
+
+Both aforementioned algorithms implemented in \lpeg{}
+are complex and lack formal documentation,
+which can make them difficult to maintain and reason about.
+This work aims to bridge this gap.
+We present and analyze these algorithms,
+proving their correctness using the Coq proof assistant%
+\footnote{The code is publicly available on
+GitHub at \selfhref{https://github.com/guidanoli/peg-coq}}.
+Moreover, we also prove their termination through a gas-based approach.
+Also, during the process of proving
+key properties about these algorithms,
+we have noticed a few issues
+that could be reviewed
+in future versions of \lpeg{}.
+
+The remainder of this work is structured as follows:
+\Cref{chapter:pegs} presents the syntax and semantics of PEGs.
+In \Cref{chapter:wf-algorithm}
+we formalize the well-formedness algorithm
+and prove its correctness and termination.
+\Cref{chapter:first-set}
+does the same for the first-set algorithm.
+In \Cref{chapter:related-work},
+we analyze how our work differs from prior research,
+highlighting key differences and improvements.
+Finally, \Cref{chapter:conclusion}
+summarizes our findings and outlines directions
+for future research.

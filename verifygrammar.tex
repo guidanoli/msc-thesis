@@ -1,0 +1,21 @@
+\begin{mathpar}
+    \namedinferrule{vg1}
+    {\Coherent{g}{\PNT{0}}{false}}
+    {\VerifyGrammar{g}{false}}
+    
+    \namedinferrule{vg2}
+    {\Coherent{g}{\PNT{0}}{true} \\ \lCoherent{g}{g}{false}}
+    {\VerifyGrammar{g}{false}}
+
+    \namedinferrule{vg3}
+    {\Coherent{g}{\PNT{0}}{true} \\ \lCoherent{g}{g}{true} \\ \lVerifyRule{g}{g}{false}}
+    {\VerifyGrammar{g}{false}}
+
+    \namedinferrule{vg4}
+    {\Coherent{g}{\PNT{0}}{true} \\ \lCoherent{g}{g}{true} \\ \lVerifyRule{g}{g}{true} \\ \lCheckLoops{g}{g}{true}}
+    {\VerifyGrammar{g}{false}}
+
+    \namedinferrule{vg5}
+    {\Coherent{g}{\PNT{0}}{true} \\ \lCoherent{g}{g}{true} \\ \lVerifyRule{g}{g}{true} \\ \lCheckLoops{g}{g}{false}}
+    {\VerifyGrammar{g}{true}}
+\end{mathpar}

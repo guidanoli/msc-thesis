@@ -1,0 +1,49 @@
+\begin{align*}
+    \begin{aligned}[t]
+        & \firstcomp{g}{p}{follow}{0} = \None \\
+        & \firstcomp{g}{p}{follow}{(1+gas)} = \\
+        & \begin{aligned}[t]
+            & \matchwith{p} \\
+            & \matchcase{\PEmpty}{\Some (true, follow)} \\
+            & \matchcase{\PSet{cs}}{\Some (false, \Set{cs})} \\
+            & \matchcase{\PRepetition{p}}{\begin{aligned}[t]
+                & \matchwith{\firstcomp{g}{p}{follow}{gas}} \\
+                & \matchcase{\Some (b, first)}{\Some (true, \SetUnion{first}{follow})} \\
+                & \matchcase{\None}{\None} \\
+                & \matchend{}
+            \end{aligned}} \\
+            & \matchcase{\PNot{p}}{\begin{aligned}[t]
+                & \matchwith{p} \\
+                & \matchcase{\PSet{cs}}{\Some (true, \SetMinus{\Sigma}{\Set{cs})}} \\
+                & \matchcase{otherwise}{\Some (true, follow)} \\
+                & \matchend{}
+            \end{aligned}} \\
+            & \matchcase{\PAnd{p}}{\begin{aligned}[t]
+                & \matchwith{\firstcomp{g}{p}{\Sigma}{gas}} \\
+                & \matchcase{\Some (b, first)}{\Some (b, \SetIntersection{first}{follow})} \\
+                & \matchcase{\None}{\None} \\
+                & \matchend{}
+            \end{aligned}} \\
+            & \matchcase{\PNT{i}}{\begin{aligned}[t]
+                & \matchwith{g[i]} \\
+                & \matchcase{\Some p}{\firstcomp{g}{p}{follow}{gas}} \\
+                & \matchcase{\None}{\None} \\
+                & \matchend{}
+            \end{aligned}} \\
+            & \matchcase{\PSequence{p_1}{p_2}}{\begin{aligned}[t]
+                & \matchwith{\nullablecomp{g}{p_1}{gas}} \\
+                & \matchcase{\Some false}{\firstcomp{g}{p_1}{\Sigma}{gas}} \\
+                & \matchcase{\Some true}{\begin{aligned}[t]
+                    & \matchwith{\firstcomp{g}{p_2}{follow}{gas}} \\
+                    & \matchcase{\Some (b_2, first_2)}{b_2 \otimes (\firstcomp{g}{p_1}{first_2}{gas})} \\
+                    & \matchcase{\None}{\None} \\
+                    & \matchend{}
+                \end{aligned}} \\
+                & \matchcase{\None}{\None} \\
+                & \matchend{}
+            \end{aligned}} \\
+            & \matchcase{\PChoice{p_1}{p_2}}{(\firstcomp{g}{p_1}{follow}{gas}) \oplus (\firstcomp{g}{p_2}{follow}{gas})} \\
+            & \matchend{}
+        \end{aligned}
+    \end{aligned}
+\end{align*}

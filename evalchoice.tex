@@ -1,0 +1,9 @@
+\newcommand{\eval}[4]{eval\ #1\ #2\ #3\ #4}
+
+\begin{align*}
+    \eval{g}{\dsqb{\PChoice{p_1}{p_2}}}{d}{nb} =\
+    & \matchwith{\eval{g}{p_1}{d}{nb}} \\
+    & \matchcase{(\Some nb', k)}{\eval{g}{p_2}{d}{nb'}} \\
+    & \matchcase{(\None, k)}{(\None, k)} \\
+    & \matchend{}
+\end{align*}

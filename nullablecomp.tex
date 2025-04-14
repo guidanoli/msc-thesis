@@ -1,0 +1,38 @@
+\begin{align*}
+    \begin{aligned}[t]
+        & \nullablecomp{g}{p}{d}{0} = \None \\
+        & \nullablecomp{g}{p}{d}{(1+gas)} = \\
+        & \begin{aligned}[t]
+            & \matchwith{p} \\
+            & \matchcase{\PEmpty}{\Some \Some true} \\
+            & \matchcase{\PSet{cs}}{\Some \Some false} \\
+            & \matchcase{\PRepetition{p}}{\Some \Some true} \\
+            & \matchcase{\PNot{p}}{\Some \Some true} \\
+            & \matchcase{\PAnd{p}}{\Some \Some true} \\
+            & \matchcase{\PNT{i}}{\begin{aligned}[t]
+                & \matchwith{g[i]} \\
+                & \matchcase{\Some p}{\begin{aligned}[t]
+                    & \matchwith{d} \\
+                    & \matchcase{0}{\Some \None} \\
+                    & \matchcase{1+d'}{\nullablecomp{g}{p}{d'}{gas}} \\
+                    & \matchend{}
+                \end{aligned}} \\
+                & \matchcase{\None}{\None} \\
+                & \matchend{}
+            \end{aligned}} \\
+            & \matchcase{\PSequence{p_1}{p_2}}{\begin{aligned}[t]
+                & \matchwith{\nullablecomp{g}{p_1}{d}{gas}} \\
+                & \matchcase{\Some \Some true}{\nullablecomp{g}{p_2}{d}{gas}} \\
+                & \matchcase{res}{res} \\
+                & \matchend{}
+            \end{aligned}} \\
+            & \matchcase{\PChoice{p_1}{p_2}}{\begin{aligned}[t]
+                & \matchwith{\nullablecomp{g}{p_1}{d}{gas}} \\
+                & \matchcase{\Some \Some false}{\nullablecomp{g}{p_2}{d}{gas}} \\
+                & \matchcase{res}{res} \\
+                & \matchend{}
+            \end{aligned}} \\
+            & \matchend{}
+        \end{aligned}
+    \end{aligned}
+\end{align*}

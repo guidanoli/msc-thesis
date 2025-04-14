@@ -1,0 +1,61 @@
+\begin{mathpar}
+    \namedinferrule{m-eps}
+    { }
+    {\Matches{g}{\PEmpty}{s}{s}}
+
+    \namedinferrule{m-set-nil}
+    { }
+    {\DoesNotMatch{g}{\PSet{cs}}{\EmptyString}}
+
+    \namedinferrule{m-set-cons-in}
+    {a \in cs}
+    {\Matches{g}{\PSet{cs}}{\String{a}{s}}{s}}
+
+    \namedinferrule{m-set-cons-not-in}
+    {a \not\in cs}
+    {\DoesNotMatch{g}{\PSet{cs}}{\String{a}{s}}}
+
+    \namedinferrule{m-nonterminal}
+    {g[i] = \Some p \\ \Matches{g}{p}{s}{res}}
+    {\Matches{g}{\PNT i}{s}{res}}
+
+    \namedinferrule{m-rep-fail}
+    {\DoesNotMatch{g}{p}{s}}
+    {\Matches{g}{\PRepetition p}{s}{s}}
+
+    \namedinferrule{m-rep-succ}
+    {\Matches{g}{p}{s}{s'} \\ \Matches{g}{\PRepetition p}{s'}{res}}
+    {\Matches{g}{\PRepetition p}{s}{res}}
+
+    \namedinferrule{m-not-succ}
+    {\Matches{g}{p}{s}{s'}}
+    {\DoesNotMatch{g}{\PNot p}{s}}
+
+    \namedinferrule{m-not-fail}
+    {\DoesNotMatch{g}{p}{s}}
+    {\Matches{g}{\PNot p}{s}{s}}
+
+    \namedinferrule{m-and-succ}
+    {\Matches{g}{p}{s}{s'}}
+    {\Matches{g}{\PAnd{p}}{s}{s}}
+
+    \namedinferrule{m-and-fail}
+    {\DoesNotMatch{g}{p}{s}}
+    {\DoesNotMatch{g}{\PAnd{p}}{s}}
+
+    \namedinferrule{m-seq-fail}
+    {\DoesNotMatch{g}{p_1}{s}}
+    {\DoesNotMatch{g}{\PSequence{p_1}{p_2}}{s}}
+
+    \namedinferrule{m-seq-succ}
+    {\Matches{g}{p_1}{s}{s'} \\ \Matches{g}{p_2}{s'}{res}}
+    {\Matches{g}{\PSequence{p_1}{p_2}}{s}{res}}
+
+    \namedinferrule{m-choice-succ}
+    {\Matches{g}{p_1}{s}{s'}}
+    {\Matches{g}{\PChoice{p_1}{p_2}}{s}{s'}}
+
+    \namedinferrule{m-choice-fail}
+    {\DoesNotMatch{g}{p_1}{s} \\ \Matches{g}{p_2}{s}{res}}
+    {\Matches{g}{\PChoice{p_1}{p_2}}{s}{res}}
+\end{mathpar}

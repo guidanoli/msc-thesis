@@ -1,0 +1,778 @@
+\section{Left-recursive rules}
+\label{section:lr-rules}
+
+In general,
+we consider a rule to be left-recursive
+if it can wind up in itself
+without consuming any input in-between.
+This brings us to the heart
+of the algorithm that
+detects left-recursive rules.
+On a high level,
+it symbolically parses each rule,
+until it either consumes some input,
+visits some rule twice without consuming any input,
+or simply finishes.
+
+The algorithm categorizes patterns into three groups.
+If a pattern can be parsed until its end without consuming any input,
+it is said to be \emph{nullable}.
+If, otherwise, it always consumes some input,
+it is categorized as \emph{non-nullable}.
+Alternatively, if it can lead to some rule twice,
+without consuming any input,
+it is categorized as left-recursive.
+
+In order to check whether a pattern
+is guaranteed to consume some input,
+the algorithm uses a conservative approximation
+proposed by Ford~\cite{ford_parsing_2004},
+which makes two assumptions.
+The first one is that $\PNot{p}$ may match,
+and the second one is that,
+in the case of $\PChoice{p_1}{p_2}$,
+it may visit $p_2$,
+without checking whether $p_1$ always matches.
+For illustrative purposes,
+we present a simple counterexample
+for each assumption.
+
+A counterexample for the first assumption
+is the pattern $\PNot{\PEmpty}$,
+which never matches.
+Meanwhile, the second assumption doesn't hold
+for the pattern $\PChoice{\PEmpty}{p_2}$,
+because $\PEmpty$ always matches,
+and, therefore, $p_2$ is never visited.
+The reader might think that
+these cases can be easily spotted,
+by the simplicity of the counterexamples.
+However,
+Ford~\cite{ford_parsing_2004} proved that
+the general case of this problem is undecidable.
+
+One of the conditions for the algorithm to yield a result
+is whenever it consumes some input.
+As a result,
+it exclusively visits patterns that may be reached
+without consuming any input.
+Therefore, if the algorithm revisits a rule,
+this means a path exists in which
+the parsing routine may reach the same rule
+and with the same input string,
+which would indicate that such rule is left-recursive.
+We will now discuss possible ways to detect
+when a rule has been visited twice.
+
+One possible way to detect left-recursive rules
+is through a set of visited rules,
+which is checked and updated
+every time a nonterminal pattern is visited.
+Constant time complexity
+can be achieved
+by using data structures
+such as hash tables.
+
+Another approach,
+which doesn't involve complex data structures,
+uses a counter of visited rules,
+which starts at zero
+and gets incremented every time a rule is visited.
+If this value ever surpasses the number of grammar rules,
+then we know, by the pigeonhole principle,
+that some rule has been visited more than once.
+In the case of grammars with left-recursive rules,
+we may visit more rules than necessary,
+however, we are not particularly worried
+about the performance of the algorithm
+in the case of errors.
+
+\lpeg{} adopts this last approach.
+Our formalization follows \lpeg{},
+though with a small twist:
+instead of counting visited rules from zero until the limit,
+we count to-be-visited rules from the limit down to zero.
+This simplifies our formalization
+by moving the limit calculation out of the algorithm body,
+and letting the limit be passed down as a parameter instead.
+
+At this point,
+it is important to draw a distinction between
+exhausting the counter of to-be-visited rules
+and correctly identifying a left-recursive rule.
+When the algorithm starts,
+the counter is initialized with the provided limit.
+It is then decremented every time a rule is visited.
+If the counter ever reaches zero,
+then attempting to visit any rule
+will return an error.
+The algorithm does not determine
+whether this error indicates left recursion,
+because it would require the algorithm to check
+whether the limit is greater than the number of grammar rules.
+Instead, we leave it to the caller
+to provide a high enough limit,
+in which case the algorithm indeed
+correctly labels rules as left-recursive
+by returning an error.
+
+Because of this shift in responsibilities,
+we adapt the nomenclature
+for the counter parameter and associated error,
+based on an analogy with call stacks.
+If, every time a rule is visited, it were pushed onto a stack $k$,
+then we could think of the counter parameter $d$ as the stack depth limit;
+and surpassing it would be similar to a stack overflow error.
+
+For the sole purpose of helping us prove certain properties about the algorithm,
+we will also include this stack $k$, a list of rule indices, as an output,
+though it doesn't affect the algorithm.
+As we will soon see, it is either appended, passed along, or ignored.
+It works as a trace of the inner workings of the function,
+a high-level concept we only use for proving lemmas about this algorithm.
+\lpeg{} also implements this output, but it is only used in error messages.
+
+We now describe the algorithm,
+starting with its inputs and outputs.
+It receives a pattern, a grammar, and a stack depth limit,
+and returns a label and a stack.
+We represent labels by
+optional Boolean values
+$\Some true$ (nullable),
+$\Some false$ (non-nullable) and
+$\None$ (stack overflow error);
+and stacks by either
+$nil$ (an empty stack) or
+$i :: k$ (a rule of index $i$ concatenated with a stack $k$).
+
+The function is defined recursively.
+In most cases, it calls itself for each sub-pattern.
+In the case of nonterminal patterns, however,
+it calls itself for the referenced rule.
+Furthermore, the function propagates any stack overflow errors.
+This means that,
+if some recursive call returns $\None$,
+signaling a stack overflow,
+and a stack $k$,
+then the function also returns $\None$ and $k$.
+
+For the empty pattern $\PEmpty$,
+the function returns a label $\Some true$ and $nil$,
+because it is nullable and doesn't visit any nonterminal.
+We categorize it as nullable because it may match while consuming no input.
+In particular, it always matches while consuming no input.
+
+As for character set patterns $\PSet{cs}$,
+the function returns $\Some false$ and $nil$,
+because it is non-nullable,
+meaning it always consumes some input when it matches.
+It also doesn't visit any nonterminal.
+
+For a nonterminal pattern $\PNT{i}$,
+the function first checks the stack depth limit $d$.
+If $d=0$, it returns $\None$ and $nil$,
+signaling a stack overflow
+and that it didn't visit any nonterminal.
+Otherwise, if $d\ge1$,
+then the function calls itself for the $i^{th}$ rule of the grammar,
+while passing a stack depth limit of $d-1$.
+If this recursive call returns a label $res$ and a stack $k$,
+then the function returns $res$ and $i :: k$.
+This way, the stack accumulates
+the indices of the grammar rules
+in the same order in which they are visited.
+
+For a repetition pattern $\PRepetition{p}$,
+the function evaluates $p$,
+which returns $res$ and $k$,
+to check for any stack overflow errors.
+If $res\ne\None$,
+then it returns $\Some true$ and $k$,
+as it can match while consuming no input,
+in case $p$ fails.
+We assume that $p$ can fail because,
+in the final verification step,
+we ensure that $p$ is non-nullable,
+and we know that non-nullable patterns
+fail to match the empty string.
+
+Predicate patterns $\PNot{p}$ and $\PAnd{p}$ are evaluated
+in the same way as repetition patterns,
+but for different reasons.
+Repetition patterns are nullable
+because they can always match without consuming any input.
+Meanwhile, predicate patterns are nullable by approximation,
+under the assumption that $p$ may match,
+in the case of $\PAnd{p}$,
+or fail to match,
+in the case of $\PNot{p}$.
+
+For a sequence pattern $\PSequence{p_1}{p_2}$,
+the function first evaluates $p_1$.
+If $p_1$ is non-nullable,
+then so is the sequence $\PSequence{p_1}{p_2}$,
+and the function returns the same label and stack as $p_1$.
+Note that $p_2$ is not even evaluated in this case,
+because it would be visited with a shorter input string
+during parsing.
+This is the only case in which
+the nullable property comes into play
+in this algorithm.
+If, otherwise, $p_1$ is nullable,
+then it evaluates $p_2$
+and returns the same label and stack as $p_2$.
+
+Finally, for a choice pattern $\PChoice{p_1}{p_2}$,
+it first evaluates $p_1$.
+If it returns $\Some b_1$,
+indicating that $p_1$ did not overflow the stack,
+then it evaluates $p_2$.
+If it also returns $\Some b_2$,
+then the function returns $\Some (b_1 \vee b_2)$
+and the same stack as $p_2$.
+
+The algorithm we've just described
+is quite similar to the one implemented in \lpeg{}.
+There is, however, one small difference
+related to the use of tail calls
+as an optimization technique.
+In C, tail calls are implemented
+with \texttt{goto} statements.
+To apply this optimization technique,
+\lpeg{} adds an extra parameter to the function
+to work as an accumulator for the nullable property.
+Without this accumulator parameter,
+the evaluation of choice patterns $\PChoice{p_1}{p_2}$
+would rely solely on recursion.
+It would evaluate $p_1$ and $p_2$,
+then perform a Boolean \scor{} operation on the results.
+
+With the addition of a Boolean parameter $nb$,
+we can turn the evaluation of $p_2$ into a tail call.
+Instead of making the Boolean \scor{} operation explicitly,
+we let the accumulator do it under-the-hood.
+This works because,
+in the base cases of the recursion,
+in which the function would return
+either $\Some true$ or $\Some false$,
+we return instead $\Some (true \vee nb)$ and $\Some (false \vee nb)$,
+which get simplified to $\Some true$ and $\Some nb$, respectively.
+\Cref{fig:evalchoice} shows a Coq-like pseudocode of how choice patterns
+are evaluated with the Boolean parameter $nb$.
+
+\begin{figure}
+    \centering
+    \input{evalchoice}
+    \caption{Pseudocode of the evaluation of choice patterns.}
+    \label{fig:evalchoice}
+\end{figure}
+
+We would also like to highlight
+how this nullable accumulator allows
+the evaluation of repetitions and predicates
+to be rewritten as tail calls.
+Previously,
+we would have to check if $p$ evaluated to $\None$,
+before returning $\Some true$.
+Now, we can simply pass $true$ as the nullable accumulator,
+which guarantees that, if $p$ does not evaluate to $\None$,
+it evaluates to $\Some true$.
+
+There are some ways in which this function
+could be implemented in Coq as a fixed-point.
+The classical way is to add a gas parameter,
+which gets decremented in every recursive call.
+We make the function return an optional value,
+such that, if the gas parameter ever reaches zero,
+it returns $\None$.
+Other ways are providing a well-formedness proof,
+or a measure function.
+We choose the first strategy,
+because it is the simplest to implement.
+
+Finally,
+\Cref{fig:vr-function} presents the algorithm
+defined as a fixed-point function.
+It returns an optional value,
+because we adopted the gas strategy,
+but also because it cannot evaluate
+nonterminal patterns that
+reference nonexistent rules.
+In this case,
+the function also returns $\None$.
+In all other cases,
+the function returns $\Some (res, k)$,
+with $res$ being a label, and $k$, a stack.
+\begin{figure}
+    \centering
+    \input{verifyrulecomp}
+    \caption{The left recursion detection function.}
+    \label{fig:vr-function}
+\end{figure}
+
+At this point,
+the reader should be warned that
+we will not attempt to prove the correctness
+of this function in isolation.
+In fact, we will not even try to formally
+define left-recursive rules.
+This might frustrate the reader,
+but we assure you that such proof will not be necessary.
+Instead,
+we will later prove the correctness of the whole algorithm
+once we introduce all steps of the verification process.
+In this section,
+we will simply prove
+that the label returned by the function
+converges with respect to the gas counter and stack depth limit.
+
+About this fixed-point definition,
+we will initially prove some basic lemmas.
+Starting with \Cref{lemma:vr-gas-convergence},
+we state that, if the function returns $\Some (res, k)$,
+then increasing the value of the gas parameter
+will not change the result.
+This is what we mean by
+the function converging
+with respect to the gas counter.
+
+\begin{lemma}%[Verify Rule Gas Convergence]
+    If $\verifyrulecomp{g}{p}{d}{nb}{gas} = \Some (res, k)$, \\
+    then $\forall gas' \ge gas$,
+    $\verifyrulecomp{g}{p}{d}{nb}{gas'} = \Some (res, k)$.
+    \label{lemma:vr-gas-convergence}
+\end{lemma}
+
+\Cref{lemma:vr-termination} states that,
+for any coherent pattern and grammar,
+there exists a lower bound for the gas parameter,
+for which the function returns $\Some (res, k)$.
+The lower bound
+takes into account
+the size of the pattern,
+the size of the grammar,
+and the stack depth limit.
+
+\begin{lemma}%[Verify Rule Termination]
+    If $\Coherent{g}{p}{true}$,
+    and $\lCoherent{g}{g}{true}$, \\
+    then, $\forall gas \ge \size{p} + d \cdot \size{g}$,
+    $\exists res\ \exists k\ \verifyrulecomp{g}{p}{d}{nb}{gas} = \Some (res, k)$.
+    \label{lemma:vr-termination}
+\end{lemma}
+
+Now, we would like to
+prove that the function
+converges with respect to the
+stack depth limit,
+although in a somewhat unconventional
+sense of the word.
+That is because,
+in the case of left-recursive rules,
+the stack returned by the function will,
+in fact,
+diverge.
+However, we are not interested in
+the output stack, in this case.
+What really matters to the following
+steps of the verification process
+is that the label returned by the algorithm converges
+with respect to the stack depth limit.
+
+In order to prove such lemma,
+we realized an inductive, gasless predicate
+would be better suited
+than the fixed-point definition,
+as it would be easier to perform proofs by induction,
+and without having to deal with a gas parameter.
+\Cref{fig:verifyrule}
+defines such predicate,
+denoted as $\VerifyRule{g}{p}{d}{nb}{res}{k}$.
+It takes a grammar $g$,
+a pattern $p$,
+a stack depth limit $d$,
+and a nullable accumulator $nb$,
+and outputs a result $res$,
+and a stack trace $k$.
+
+\begin{figure}
+    \input{verifyrule}
+    \caption{The left recursion detection predicate.}
+    \label{fig:verifyrule}
+\end{figure}
+
+In order to reach our final goal
+of proving that the function converges
+with respect to the stack depth limit,
+we need to first prove some intermediary lemmas.
+First, we need to relate the predicate and
+the fixed-point definition together,
+so that we can apply the proofs about the
+former to the latter.
+
+We begin with
+\Cref{lemma:vr-determinism},
+which states that,
+for identical input,
+the predicate yields the same output.
+We can therefore state
+that the predicate is deterministic.
+
+\begin{lemma}
+    If $\VerifyRule{g}{p}{d}{nb}{res_1}{k_1}$,
+    and $\VerifyRule{g}{p}{d}{nb}{res_2}{k_2}$, \\
+    then $res_1 = res_2$ and $k_1 = k_2$.
+    \label{lemma:vr-determinism}
+\end{lemma}
+
+\Cref{lemma:vr-follows} shows that
+every result returned by the fixed-point definition
+can be inductively constructed using the predicate definition.
+
+\begin{lemma}
+    If $\verifyrulecomp{g}{p}{d}{nb}{gas} = \Some (res, k)$, \\
+    then $\VerifyRule{g}{p}{d}{nb}{res}{k}$.
+    \label{lemma:vr-follows}
+\end{lemma}
+
+\Cref{lemma:stack-depth-convergence-not-lr-pattern} shows that,
+if a pattern evaluates to either nullable or non-nullable,
+then increasing the stack depth limit
+doesn't affect the result.
+This is expected,
+because, in both cases,
+it doesn't surpass the limit,
+and increasing it preserves this property
+by transitivity.
+
+\begin{lemma}%[Stack Depth Limit Increase without Overflow]
+    If $\VerifyRule{g}{p}{d}{nb}{\Some nb'}{k}$, \\
+    then $\forall d' \ge d, \VerifyRule{g}{p}{d'}{nb}{\Some nb'}{k}$.
+    \label{lemma:stack-depth-convergence-not-lr-pattern}
+\end{lemma}
+
+\Cref{lemma:stack-depth-lr-pattern} shows that,
+on stack overflow,
+the output stack $k$ has length $d$.
+That is expected,
+because a stack overflow happens
+when the stack is full
+before trying to visit a rule.
+
+\begin{lemma}%[Stack Length on Overflow]
+    If $\VerifyRule{g}{p}{d}{nb}{\None}{k}$,
+    then $\length{k} = d$.
+    \label{lemma:stack-depth-lr-pattern}
+\end{lemma}
+
+\Cref{lemma:coherent-stack} states
+that the output stack
+only contains references to
+existing rules in the grammar.
+Since we are identifying rules
+by their indices in a list,
+we prove this by showing that these indices
+are less than the number of rules in the grammar,
+denoted as $\length{g}$.
+This lemma may seem trivial,
+but it is necessary for us to later prove,
+using the pigeonhole principle,
+that a stack with more rules than the grammar
+will have at least one repeated rule.
+
+\begin{lemma}%[Coherent Stack]
+    If $\VerifyRule{g}{p}{d}{nb}{res}{k}$,
+    then $\forall i \in k, i < \length{g}$.
+    \label{lemma:coherent-stack}
+\end{lemma}
+
+% Next, we prove in \Cref{lemma:true-as-nb} that,
+% when provided with $true$ as the value
+% for the nullable accumulator $nb$,
+% the algorithm outputs as a result
+% either $\None$ (which means ``left-recursive'')
+% or $\Some true$ (which means ``nullable'').
+
+% \begin{lemma}%[True As Nullable Accumulator]
+%     For a grammar $g$,
+%     a pattern $p$,
+%     a natural number $d$,
+%     an optional Boolean value $res$,
+%     and a list of natural numbers $k$,
+%     if $\VerifyRule{g}{p}{d}{true}{res}{k}$,
+%     then $res \in \{\None,\ \Some true\}$.
+%     \label{lemma:true-as-nb}
+% \end{lemma}
+
+% We also state in \Cref{lemma:nb-change-not-lr-pattern} that,
+% when a pattern is identified as either nullable or non-nullable,
+% then changing the nullable accumulator
+% might change the result to either nullable or non-nullable,
+% but the output stack $k$ will remain the same.
+% Note that we're saying that it will not make
+% the pattern be marked as left-recursive.
+
+% \begin{lemma}%[Nullable Accumulator Change When Pattern Is Not Left-Recursive]
+%     For a grammar $g$,
+%     a pattern $p$,
+%     a natural number $d$,
+%     Boolean values $nb$, $nb'$ and $b$,
+%     and a list of natural numbers $k$,
+%     if $\VerifyRule{g}{p}{d}{nb}{\Some b}{k}$,
+%     then there exists some Boolean value $b'$,
+%     such that $\VerifyRule{g}{p}{d}{nb'}{\Some b'}{k}$.
+%     \label{lemma:nb-change-not-lr-pattern}
+% \end{lemma}
+
+% Alternatively,
+% when a pattern is identified as left-recursive,
+% changing the nullable accumulator
+% will change neither the result nor the stack $k$.
+% This is put forth in \Cref{lemma:nb-change-lr-pattern}.
+
+% \begin{lemma}%[Nullable Accumulator Change When Pattern Is Left-Recursive]
+%     For a grammar $g$,
+%     a pattern $p$,
+%     a natural number $d$,
+%     Boolean values $nb$ and $nb'$,
+%     and a list of natural numbers $k$,
+%     if $\VerifyRule{g}{p}{d}{nb}{\None}{k}$,
+%     then $\VerifyRule{g}{p}{d}{nb'}{\None}{k}$.
+%     \label{lemma:nb-change-lr-pattern}
+% \end{lemma}
+
+% The following lemmas will start to deal with the output stack more closely.
+% It is used by \lpeg{} to format error messages,
+% but we will use it to help us formalize certain properties about the algorithm.
+% \Cref{lemma:existential-ff} states that,
+% for any evaluation with an output stack $k_1 \dplus i :: k_2$,
+% there exists a stack depth limit and a nullable accumulator,
+% for which the evaluation of the nonterminal pattern $\PNT{i}$
+% yields the output stack $i :: k_2$.
+% We call this operation ``fast-forwarding''.
+
+% \begin{lemma}%[Existential Fast-forward]
+%     $\forall g\ \forall p\ \forall d\ \forall nb\ \forall res\ \forall k_2\ \forall k_2\ \forall i$, \\
+%     if $\VerifyRule{g}{p}{d}{nb}{res}{k_1 \dplus i :: k_2}$,
+%     then $\exists d'\ \exists nb'\ \exists res'$,
+%     such that $\VerifyRule{g}{\PNT i}{d'}{nb'}{res'}{i :: k_2}$.
+%     \label{lemma:existential-ff}
+% \end{lemma}
+
+% \Cref{lemma:existential-ff-for-lr-patterns}
+% is a particular case of \Cref{lemma:existential-ff},
+% in which the evaluation of pattern $p$ overflows the stack,
+% and, as a result, so does the evaluation of nonterminal pattern $\PNT{i}$.
+
+% \begin{lemma}%[Existential Fast-forward On Overflow]
+%     $\forall g\ \forall p\ \forall d\ \forall nb\ \forall k_2\ \forall k_2\ \forall i$, \\
+%     if $\VerifyRule{g}{p}{d}{nb}{\None}{k_1 \dplus i :: k_2}$,
+%     then $\exists d'\ \exists nb'$,
+%     such that $\VerifyRule{g}{\PNT i}{d'}{nb'}{\None}{i :: k_2}$.
+%     \label{lemma:existential-ff-for-lr-patterns}
+% \end{lemma}
+
+\Cref{lemma:ff-for-lr-patterns} states that,
+for any evaluation that results in a stack overflow,
+we can pick any rule $i$ from the output stack $k$,
+and evaluate it with a certain stack depth limit,
+so that it also results in a stack overflow,
+and returns a suffix of the original stack $k$,
+starting from $i$.
+
+\begin{lemma}%[Fast-forward on Overflow]
+    If $\VerifyRule{g}{p}{d}{nb}{\None}{k_1 \dplus i :: k_2}$, \\
+    then $\VerifyRule{g}{\PNT i}{1+\length{k_2}}{nb'}{\None}{i :: k_2}$.
+    \label{lemma:ff-for-lr-patterns}
+\end{lemma}
+
+Under the same assumptions,
+\Cref{lemma:d-increase-lr} shows that,
+if we evaluate a rule $i$ from the stack
+with an increased stack depth limit
+and it still results in a stack overflow
+and returns a stack $i :: k_3$,
+then we can increase the stack depth limit
+of the original evaluation by the same amount,
+it will also result in a stack overflow,
+and return a stack that ends with $i :: k_3$.
+
+\begin{lemma}%[Increase Overflown Stack Depth Limit]
+    If $\VerifyRule{g}{p}{d}{nb}{\None}{k_1 \dplus i :: k_2}$, \\
+    and $\VerifyRule{g}{\PNT i}{1+\length{k_3}}{nb'}{\None}{i :: k_3}$,
+    and $\length{k_2} \le \length{k_3}$, \\
+    then $\VerifyRule{g}{p}{1 + \length{k_1} + \length{k_3}}{nb}{\None}{k_1 \dplus i :: k_3}$.
+    \label{lemma:d-increase-lr}
+\end{lemma}
+
+\Cref{lemma:repeated-rule-in-stack} shows that,
+if an evaluation results in a stack overflow,
+and a rule $i$ occurs more than once in the output stack,
+then we can increase the stack depth limit by a certain amount,
+and both conditions will still hold true.
+
+\begin{lemma}%[Repeated Overflow Stack Section]
+    If $\VerifyRule{g}{p}{d}{nb}{\None}{k_1 \dplus i :: k_2 \dplus i :: k_3}$, \\
+    then $\exists d'$,
+    such that $\VerifyRule{g}{p}{d'}{nb}{\None}{k_1 \dplus i :: k_2 \dplus i :: k_2 \dplus i :: k_3}$.
+    \label{lemma:repeated-rule-in-stack}
+\end{lemma}
+
+Finally, we present the main lemma
+that we wanted to prove.
+\Cref{lemma:stack-depth-convergence}
+shows that,
+if an evaluation with a stack depth limit
+greater than the number of grammar rules
+yields a result,
+then any evaluation with an even greater stack depth limit
+yields the same result.
+The stacks can be different,
+but they are irrelevant
+for our purpose of identifying
+left-recursive rules.
+
+\begin{lemma}%[Stack Depth Limit Increase]
+    If $\VerifyRule{g}{p}{d}{nb}{res}{k}$, and $d > \length{g}$, \\
+    then, for any $d' \ge d$,
+    $\exists k'$,
+    such that $\VerifyRule{g}{p}{d'}{nb}{res}{k'}$.
+    \label{lemma:stack-depth-convergence}
+\end{lemma}
+
+We now explain the proof of this lemma.
+For the cases in which the evaluation
+does not result in a stack overflow,
+the proof follows from \Cref{lemma:stack-depth-convergence-not-lr-pattern}.
+Now, in the case of a stack overflow,
+we know from \Cref{lemma:stack-depth-lr-pattern}
+that the length of the stack $k$ is equal to the stack depth limit $d$,
+which, in this case, we assume to be greater than $n$, the number of grammar rules.
+Therefore, $\length{k} > n$.
+We know from \Cref{lemma:coherent-stack}
+that the stack only contains valid grammar rule indices.
+That is, $\forall i \in k, i < n$.
+We use these two observations and the pigeonhole principle to conclude
+that the stack must have at least one repeated rule.
+From \Cref{lemma:repeated-rule-in-stack},
+we show that we can increase the stack depth limit arbitrarily,
+and it will still result in a stack overflow.
+
+Having defined the algorithm
+that checks if a pattern is free of left recursion,
+we now use this definition to create a function
+that performs this check for a list of patterns.
+\Cref{fig:lverifyrule-function} defines this function,
+which receives a grammar, a list of patterns,
+and a gas counter,
+and returns an optional Boolean value
+indicating whether all patterns in the grammar
+are free of left recursion.
+
+\begin{figure}
+    \centering
+    \input{lverifyrulecomp}
+    \caption{The left recursion detection function for lists of patterns.}
+    \label{fig:lverifyrule-function}
+\end{figure}
+
+This new function provides values
+for two of the parameters of the underlying function:
+the stack depth limit, with the lower bound from \Cref{lemma:stack-depth-convergence},
+and the nullable accumulator, initialized with $false$.
+We could have omitted the gas counter,
+by providing the lower bound from \Cref{lemma:vr-termination},
+but we decided to postpone
+this omission to the top-most definition
+of well-formedness in our formalization.
+
+We provide a lower bound for the gas parameter,
+for which the function returns some result.
+Note that we're assuming that both the grammar $g$
+and the list of rules $rs$ are coherent,
+because they could be different.
+In practice, however,
+they will be the same.
+
+\begin{lemma}%[Verify Rules Termination]
+    If $\lCoherent{g}{g}{true}$ and $\lCoherent{g}{rs}{true}$, \\
+    then, $\forall g \ge \size{rs} + (\length{g} + 1) \cdot \size{g}$,
+    $\exists res\ \lverifyrulecomp{g}{rs}{gas} = \Some res$.
+\end{lemma}
+
+We will use this function for
+verifying that the grammar contains
+no left-recursive rules,
+since it's implemented as a list of rules.
+Since we will also be using it in our proofs,
+we will need an analogous inductive definition.
+\Cref{fig:lverifyrule} defines this predicate,
+which also receives a grammar and a list of patterns,
+and yields a Boolean value indicating
+whether all patterns in the list are free of left recursion.
+
+\begin{figure}
+    \centering
+    \input{lverifyrule}
+    \caption{The left recursion detection predicate for lists of patterns.}
+    \label{fig:lverifyrule}
+\end{figure}
+
+This predicate differs from the function in one aspect.
+While the function provides an exact value for the
+stack depth limit, the predicate allows any stack depth limit
+to identify a pattern as either nullable or non-nullable.
+That is because, according to \Cref{lemma:stack-depth-convergence-not-lr-pattern},
+the predicate instantly converges with the stack depth limit in such cases.
+In the general case, however,
+a stack depth limit greater than
+the number of rules in the grammar
+is necessary.
+
+We prove some lemmas about this predicate.
+\Cref{lemma:lverifyrule-determinism}
+states that this predicate is deterministic,
+and \Cref{lemma:lverifyrule-follows}
+states that it follows the fixed-point definition.
+
+\begin{lemma}
+    If $\lVerifyRule{g}{rs}{b_1}$
+    and $\lVerifyRule{g}{rs}{b_2}$,
+    then $b_1 = b_2$.
+    \label{lemma:lverifyrule-determinism}
+\end{lemma}
+
+\begin{lemma}
+    If $\lverifyrulecomp{g}{rs}{gas} = \Some b$,
+    then $\lVerifyRule{g}{rs}{b}$.
+    \label{lemma:lverifyrule-follows}
+\end{lemma}
+
+\Cref{lemma:lverifyrule-safety} states that,
+if a list of patterns passes the check,
+then every pattern in the list
+passes the individual check,
+being either nullable or non-nullable.
+
+\begin{lemma}%[Verify Rules Safety]
+    If $\lVerifyRule{g}{rs}{true}$, \\
+    then, $\forall r \in rs, \exists d\ \exists b\ \exists k\ \VerifyRule{g}{r}{d}{nb}{\Some b}{k}$.
+    \label{lemma:lverifyrule-safety}
+\end{lemma}
+
+Before we end this section,
+there is one final lemma we would like to present,
+which uses all the predicates of the verification algorithm
+we have defined up until now.
+\Cref{lemma:no-lr-rule-in-grammar} shows that,
+if a grammar is free of incoherent and left-recursive rules,
+then any coherent pattern is either nullable or non-nullable.
+
+\begin{lemma}%[No Left-Recursive Rule in Grammar]
+    If $\Coherent{g}{p}{true}$,
+    and $\lCoherent{g}{g}{true}$, \\
+    and $\lVerifyRule{g}{g}{true}$,
+    then $\exists d\ \exists b\ \exists k$,
+    such that $\VerifyRule{g}{p}{d}{nb}{\Some b}{k}$.
+    \label{lemma:no-lr-rule-in-grammar}
+\end{lemma}

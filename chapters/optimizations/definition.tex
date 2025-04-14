@@ -1,0 +1,201 @@
+\section{Formal definition}
+
+\Cref{fig:firstcomp} presents
+the formal definition of the first-set algorithm.
+It takes a grammar, a pattern, a follow-set,
+and some gas, and returns an optional tuple.
+The recursion is defined on the gas parameter,
+so that, if it reaches zero,
+the function returns $\None$.
+Otherwise, the function returns $\Some (b, first)$,
+where $b$ is the emptiness value,
+and $first$ is the first-set.
+If $b=false$,
+then the pattern fails to match the empty string;
+and if a string starts with a character
+$x \notin first$,
+then it is guaranteed to fail to match that string.
+The follow-set parameter is an
+accumulator that should be initialized with
+the full character set $\Sigma$.
+In order to improve the legibility
+of the function for sequence and choice patterns,
+we also define the auxiliary functions $\otimes$ and $\oplus$,
+respectively.
+\begin{figure}
+    \centering
+    \input{firstcomp}
+    \caption{The first-set function.}
+    \label{fig:firstcomp}
+\end{figure}
+\begin{figure}
+    \centering
+    \input{firstotimes}
+    \input{firstoplus}
+    \caption{The auxiliary $\otimes$ and $\oplus$ functions.}
+    \label{fig:firstaux}
+\end{figure}
+
+Having formally defined the first-set algorithm,
+we now prove its key properties.
+We begin by proving that if the function returns
+some result for some gas amount,
+it will return the same result if you provide
+a higher gas amount.
+In some sense, this means the function is stable
+when you increase the gas amount.
+
+\begin{lemma}
+If $\firstcomp{g}{p}{follow}{gas} = \Some res$, \\
+then, $\forall gas' \ge gas, \firstcomp{g}{p}{follow}{gas'} = \Some res$.
+\end{lemma}
+
+One natural consequence of this lemma is that,
+for the same grammar, pattern, and follow-set,
+the function cannot return contradicting results.
+
+\begin{lemma}
+If $\firstcomp{g}{p}{follow}{gas} = \Some res$, \\
+and $\firstcomp{g}{p}{follow}{gas'} = \Some res'$, \\
+then $res = res'$.
+\end{lemma}
+
+The previous two lemmas show how consistent
+the return of the function is,
+but both assume the existence of a gas amount
+for which the function returns some result.
+However, we know this is not always the case.
+In fact, for ill-formed grammars, it may return $\None$
+for any gas amount.
+So, it is important to prove that,
+for well-formed PEGs,
+there exists a lower bound for the gas amount,
+for which the function returns some result.
+This lower bound effectively shows that
+the algorithm terminates even without the gas parameter,
+as it is implemented in \lpeg{}.
+
+\begin{lemma}
+If $\wf{g} = true$, \\
+then $\forall gas \ge \size{p} + (1 + \length{g}) \cdot \size{g}$, \\
+$\exists res, \firstcomp{g}{p}{follow}{gas} = \Some res$.
+\end{lemma}
+
+Having proved termination,
+let us now focus on the key properties
+of the first-set algorithm,
+starting with the emptiness value.
+We prove that,
+for well-formed PEGs,
+if $b=false$,
+then the pattern fails the empty string
+(denoted as $nil$).
+Note that, in this case,
+the follow-set parameter is irrelevant.
+
+\begin{lemma}
+If $\wf{g} = true$, \\
+and $\firstcomp{g}{p}{follow}{gas} = \Some (false, first)$, \\
+then $\Matches{g}{p}{nil}{\Failure}$.
+\end{lemma}
+
+Now, we prove lemmas about the
+relation between the follow-set parameter
+and the first-set return value.
+These lemmas are necessary to prove a
+more important lemma later in this section.
+We start by proving that if the follow-set parameter
+is incremented by an extra set (through a set union operation),
+then the first-set return value is incremented by a subset
+of this extra set.
+Note that the emptiness value stays the same
+with this follow-set increment.
+
+\begin{lemma}
+If $\firstcomp{g}{p}{follow}{gas} = \Some (b, first)$, \\
+then $\forall extra, \exists extra' \subseteq extra$, \\
+such that $\firstcomp{g}{p}{(\SetUnion{follow}{extra})}{gas} = \Some (b, (\SetUnion{first}{extra'}))$.
+\end{lemma}
+
+A particular case
+is when this extra set is the first-set itself,
+as if it were fed back into the function
+through the follow-set parameter.
+In this case, the first-set output by the function is the same,
+since $\SetUnion{first}{extra'} \equiv first$ when $extra' \subseteq first$.
+This particular lemma
+is the one we actually use
+to prove the more important lemma.
+
+\begin{lemma}
+If $\firstcomp{g}{p}{follow}{gas} = \Some (b, first)$, \\
+then $\firstcomp{g}{p}{(\SetUnion{follow}{first})}{gas} = \Some (b, first)$.
+\end{lemma}
+
+The following lemma is the cornerstone of the key property of first-sets:
+If $p$ matches some string $s$, leaving a suffix $s'$ unconsumed,
+then $s$ must be either empty or start with a character
+that \emph{is} in the first-set of $p$.
+We also assume that the input PEG is well-formed,
+and that $s'$ is either empty or starts with a character in the follow-set.
+This last assumption is necessary to prove the lemma
+in the case of the sequence pattern.
+
+\begin{lemma}
+If $\wf{g} = true$, \\
+and $\firstcomp{g}{p}{follow}{gas} = \Some (b, first)$, \\
+and $\Matches{g}{p}{s}{s'}$, \\
+and $s'$ either is empty or starts with $x \in follow$, \\
+then $s$ either is empty or starts with $y \in first$.
+\end{lemma}
+
+Finally, we prove the key property of first-sets:
+For a well-formed PEG,
+if the emptiness value is $false$,
+then the pattern fails for any string
+that does not start with a character in its first-set.
+Note that we use the full character set $\Sigma$ as the follow-set.
+
+\begin{lemma}
+If $\wf{g} = true$, \\
+and $\firstcomp{g}{p}{\Sigma}{gas} = \Some (false, first)$, \\
+and $s$ either is empty or starts with $x \notin first$, \\
+then $\Matches{g}{p}{s}{\Failure}$.
+\end{lemma}
+
+Besides this main property,
+we also prove that, for non-nullable patterns,
+the follow-set parameter does not influence the result.
+
+\begin{lemma}
+If $\nullablecomp{g}{p}{gas_n} = \Some false$, \\
+and $\firstcomp{g}{p}{follow_1}{gas_1} = \Some res_1$, \\
+and $\firstcomp{g}{p}{follow_2}{gas_2} = \Some res_2$, \\
+then $res_1 = res_2$.
+\end{lemma}
+
+This lemma explains why, in the cases of character set patterns
+and sequence patterns with non-nullable first patterns,
+the follow-set parameter can be completely ignored.
+We can also observe that, in the case of repetitions $\PRepetition{p}$,
+\lpeg{} passes along the follow-set parameter to $p$,
+but any follow-set could be provided,
+given that $p$ is non-nullable from the well-formedness property.
+
+Another fact about non-nullable patterns
+is that their emptiness value is always $false$.
+From the key property of emptiness values,
+this indicates that non-nullable pattern
+fail to match the empty string,
+which we know is true.
+
+\begin{lemma}
+If $\nullablecomp{g}{p}{gas_n} = \Some false$, \\
+and $\firstcomp{g}{p}{follow}{gas} = \Some (b, first)$, \\
+then $b = false$.
+\end{lemma}
+
+
+
+% Nova seção
+

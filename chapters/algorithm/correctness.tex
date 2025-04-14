@@ -1,0 +1,207 @@
+\section{Correctness}
+
+Now, let us prove that the well-formedness check is correct.
+To do so, we first need to define an
+inductive predicate equivalent to
+the \textit{\verifygrammarname{}} function.
+\Cref{fig:verifygrammar}
+presents this predicate,
+\begin{figure}
+    \centering
+    \input{verifygrammar}
+    \caption{The well-formedness predicate.}
+    \label{fig:verifygrammar}
+\end{figure}
+which takes a grammar
+and returns a Boolean value
+indicating whether the grammar
+passes all the checks.
+It is based on the predicates
+presented in the previous sections.
+\Cref{lemma:verifygrammar-determinism}
+states that the predicate is deterministic,
+and \Cref{lemma:verifygrammar-follows}
+states that it follows the fixed-point definition.
+
+\begin{lemma}
+    \label{lemma:verifygrammar-determinism}
+    If $\VerifyGrammar{g}{b_1}$,
+    and $\VerifyGrammar{g}{b_2}$,
+    then $b_1 = b_2$.
+\end{lemma}
+
+\begin{lemma}
+    \label{lemma:verifygrammar-follows}
+    If $\verifygrammarcomp{g}{gas} = \Some b$,
+    then $\VerifyGrammar{g}{b}$.
+\end{lemma}
+
+In order to prove correctness,
+we need to generalize the pattern from $\PNT{0}$
+to any pattern $p$,
+and to break down the function \textit{wf}
+into its separate steps.
+We need to make this generalization
+because the match predicate is defined
+recursively on the current pattern.
+The generalized theorem we need to prove is the following:
+Given a grammar $g$ and a pattern $p$,
+if $g$ only contains coherent rules
+that do not lead to left recursion
+and that do not have any degenerate loops,
+and if $p$ is coherent
+and does not have degenerate loops,
+then ${\forall s, \exists res\ \Matches{g}{p}{s}{res}}$.
+
+We begin the proof by doing a strong induction on $n$,
+the length of the input string $s$,
+which gives us the inductive hypothesis ``IHn''.
+This hypothesis states that for any input string shorter than $s$
+and any pattern, we can assume that the match yields some result.
+From \Cref{lemma:no-lr-rule-in-grammar}
+and the assumption that the grammar contains no left-recursive rules,
+we can infer that the pattern also does not lead to left recursion.
+This gives us the inductive predicate
+$\VerifyRule{g}{p}{d}{nb}{\Some b}{k}$,
+which tells us that $p$ is either nullable or non-nullable.
+We do an induction on this predicate
+and handle each case separately.
+
+Let us start with the basic patterns.
+The case of the empty pattern $\PEmpty{}$ is trivial,
+as it matches any input string without consuming anything.
+The case of the character set pattern $\PSet{cs}$ is also simple.
+If $s$ is the empty string, the pattern fails to match.
+Otherwise, the string may or may not begin with the character $a \in cs$.
+If it does, then it matches while consuming $a$.
+Otherwise, it fails to match.
+
+The sequence pattern $\PSequence{p_1}{p_2}$ has two cases:
+one in which $p_1$ is non-nullable and $p_2$ is not visited,
+and another in which $p_1$ is nullable and $p_2$ is visited.
+In both cases, we have an inductive hypothesis stating that
+$p_1$ has a match result for input string $s$.
+If this match result is a failure,
+then the whole sequence $\PSequence{p_1}{p_2}$ also fails.
+If the match result is a success,
+then $p_1$ leaves a suffix string $s'$ unconsumed.
+Let us handle this case for both scenarios separately.
+
+If $p_1$ is non-nullable,
+then we can use \Cref{lemma:non-nullable-pattern-proper-suffix}
+to state that $s'$ is a proper suffix of $s$,
+and therefore shorter than $s$.
+This allows us to use IHn,
+and state that $p_2$ has a match result for the input string $s'$.
+This implies that the sequence has this same match result.
+
+Otherwise, if $p_1$ is nullable, then we can use
+\Cref{lemma:match-suffix} to state that
+$s'$ is a suffix of $s$.
+This means that $s'$ is either equal to $s$, or a proper suffix of $s$.
+If $s$ is equal to $s'$,
+then we can use the inductive hypothesis
+to state that $p_2$ yields a match result for $s'=s$.
+Otherwise, then we can use IHn in the same way as the previous case,
+because $s'$ would be shorter than $s$.
+
+Now let us consider the case of the choice pattern $\PChoice{p_1}{p_2}$.
+Similar to the case of the sequence pattern,
+we have induction hypotheses for $p_1$ and $p_2$
+yielding a match result for the input string $s$.
+This case is simpler because $s$ is the same input string for both choice options,
+so these induction hypotheses are enough to prove this case.
+
+The case of the repetition pattern $\PRepetition{p}$ is the most interesting one,
+as we get to use the fact that $p$ must be non-nullable in the proof.
+From the induction step, we have the inductive hypothesis that
+$p$ yields a match result for the input string $s$.
+If $p$ fails to match, then $\PRepetition{p}$ matches without consuming anything.
+If, otherwise, $p$ matches, then it leaves a string $s'$ unconsumed.
+Since $p$ is non-nullable, $s'$ must be a proper suffix of $s$.
+Therefore, we can use IHn to state that $\PRepetition{p}$
+yields a match result $res$ for $s'$, because it is shorter than $s$.
+In this case, $\PRepetition{p}$ also yields $res$ for $s$.
+
+The case of the predicates $\PNot{p}$ and $\PAnd{p}$ are pretty straightforward.
+We first use the inductive hypothesis that $p$
+yields a match result for the input string $s$.
+If $p$ matches,
+then $\PAnd{p}$ matches without consuming anything,
+and $\PNot{p}$ fails to match.
+Otherwise, if $p$ fails to match,
+then so does $\PAnd{p}$,
+and $\PNot{p}$ matches without consuming anything.
+
+Finally, we prove the case of the non-terminal pattern $\PNT{i}$,
+which is surprisingly simple.
+From the induction step,
+we are given $p$, the $i^{th}$ rule of the grammar.
+From the initial hypotheses,
+we know that $p$ is coherent and free of degenerate loops,
+because it is a grammar rule.
+We can then use the inductive hypothesis
+from the $\verifyrulename{}$ predicate to
+state that $p$ yields a match result for the input string $s$.
+\begin{theorem}
+    \label{theorem:wf-correctness-generalized}
+    Given a grammar $g$ and a pattern $p$,
+    if $g$ only contains coherent rules
+    that do not lead to left recursion
+    and that free of degenerate loops,
+    and if $p$ is coherent
+    and free of degenerate loops,
+    then $\forall s, \exists res\ \Matches{g}{p}{s}{res}$.
+\end{theorem}
+Having proved \Cref{theorem:wf-correctness-generalized},
+we can finally prove the original theorem,
+which states that, for any grammar $g$
+that satisfies $\wf{g} = true$,
+and for any input string,
+the non-terminal pattern $\PNT{0}$
+yields a match result.
+
+\Cref{lemma:verifygrammar-termination} states that
+the function \textit{\verifygrammarname{}} returns
+$\Some b$ when given a gas counter greater or equal
+to $\verifygrammargas{g}$.
+In the implementation of the function \textit{wf},
+we pass $\verifygrammargas{g}$ as the gas counter
+for the function \textit{\verifygrammarname{}}.
+Therefore, if \textit{wf} returns $true$,
+then it must be because \textit{\verifygrammarname{}}
+returned $\Some true$.
+
+If the function \textit{\verifygrammarname{}}
+returns $\Some true$,
+then,
+according to \Cref{lemma:verifygrammar-follows},
+we can construct the predicate $\VerifyGrammar{g}{true}$.
+We can see that this only happens when
+the input grammar has passed
+all the checks.
+From \Cref{fig:verifygrammar},
+we can see that this implies in
+several other predicates,
+many of which are necessary to use
+\Cref{theorem:wf-correctness-generalized}.
+There are only two missing predicates:
+$\Coherent{g}{\PNT{0}}{true}$,
+which states that the initial pattern is coherent,
+and $\CheckLoops{g}{\PNT{0}}{d}{false}$,
+which states that it does not contain any degenerate loops.
+
+We can derive both predicates
+from the fact that $\PNT{0}$ is a rule,
+which we have checked already.
+We use \Cref{lemma:lcoherent-safety}
+to prove that $\PNT{0}$ is coherent,
+and \Cref{lemma:lcheckloops-safety}
+to prove that it contains no degenerate loops.
+With this, we are able to prove the original theorem.
+
+\begin{theorem}
+    For any grammar $g$,
+    if $\wf{g} = true$,
+    then $g$ is complete.
+\end{theorem}

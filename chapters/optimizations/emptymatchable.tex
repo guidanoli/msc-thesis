@@ -1,0 +1,76 @@
+\section{Matching the empty string}
+
+Besides the first-set of a pattern,
+the algorithm implemented in \lpeg{} also returns
+a Boolean value, which indicates whether the
+pattern may match the empty string,
+a property we call \emph{emptiness}.
+It is another conservative approximation:
+the value $true$ has no meaning,
+while the value $false$ indicates that the pattern
+fails to match the empty string.
+\lpeg{} needs this information
+because it cannot use the first-set
+to verify whether a pattern fails the empty string,
+since the empty string has no first character.
+
+Let us see how \lpeg{} computes
+the emptiness of patterns.
+The base cases are quite simple.
+The empty pattern $\PEmpty$ and
+the repetition pattern $\PRepetition{p}$
+match every input string,
+which includes the empty string.
+So, for these patterns,
+the function returns $true$.
+
+The character class pattern $\PSet{cs}$,
+as with any non-nullable pattern,
+does not match the empty string.
+Therefore, the value for this pattern is $false$.
+
+For the not-predicate pattern $\PNot{p}$,
+\lpeg{} is rather conservative,
+always returning $true$.
+However, we believe there is a way
+to make the emptiness value
+not a conservative approximation
+but an exact representation of whether
+the pattern matches the empty string:
+The function could call itself recursively for $p$
+and negate its emptiness value.
+However, the cases of $\PNot{p}$
+in which $p$ matches the empty string
+are not useful in practice.
+
+The and-predicate pattern $\PAnd{p}$
+and the non-terminal pattern $\PNT{i}$
+simply forward the Boolean value
+from the underlying pattern,
+because they fail if and only if
+the underlying pattern fails.
+
+The sequence pattern $\PSequence{p_1}{p_2}$
+matches the empty string if
+both $p_1$ and $p_2$ do.
+Intuitively, this would mean that the emptiness value of the sequence
+would be the Boolean \scand{} of the emptiness values of $p_1$ and $p_2$,
+but that is not exactly what is implemented in the algorithm.
+As we have discussed at the end of the previous section,
+when $p_1$ is non-nullable, $p_2$ is not visited,
+and, therefore, the emptiness value of $p_2$ is not calculated.
+However, we don't need this value,
+since the emptiness value of $p_1$ is $false$ in this case,
+which allows for the short-circuit evaluation
+of the Boolean \scand{} expression to $false$.
+Meanwhile, when $p_1$ is nullable,
+the emptiness value of both $p_1$ and $p_2$ are computed,
+and their Boolean \scand{} is calculated normally.
+
+Finally, the case of the choice pattern $\PChoice{p_1}{p_2}$
+is similar to that of the sequence pattern,
+but instead of a Boolean \scand{} operation,
+it performs a Boolean \scor{}
+of the emptiness values of $p_1$ and $p_2$.
+That is because the choice matches the empty string
+if one of the options does.

@@ -1,0 +1,137 @@
+% Authors
+
+\newcommand{\guilherme}[0]{Guilherme Dantas de Oliveira}
+\newcommand{\roberto}[0]{Roberto Ierusalimschy}
+
+\newenvironment{biography}[1]{
+    \begin{minipage}[c]{0.2\linewidth}
+        \begin{flushleft}
+            \includegraphics[width=0.8\linewidth]{#1}
+        \end{flushleft}
+    \end{minipage}
+    \begin{minipage}[c]{0.7\linewidth}
+}{
+    \end{minipage}
+}
+
+% Links
+
+\newcommand{\selfhref}[1]{\href{#1}{#1}}
+
+% mathpartir
+
+\newcommand{\rulename}[1]{\text{\fontfamily{cmr}\selectfont\textsc{\small(#1)}}}
+\newcommand{\namedinferrule}[3]{\inferrule{#2}{#3}\enspace\rulename{#1}}
+
+% Coq
+
+\newcommand{\scor}[0]{\textsc{or}}
+\newcommand{\scand}[0]{\textsc{and}}
+
+\def\None{None}
+\def\Some#1{Some\ #1}
+
+\newcommand{\EmptyString}[0]{nil}
+\newcommand{\String}[2]{#1 :: #2}
+
+\DeclareMathOperator{\dplus}{+\kern -0.4em+}
+
+\newcommand{\matchwith}[1]{\text{\textbf{match} $#1$ \textbf{with}}}
+\newcommand{\matchcase}[2]{\vert\ #1 \Rightarrow #2}
+\newcommand{\matchend}[0]{\text{\textbf{end}}}
+\newcommand{\letin}[2]{\text{\textbf{let} $#1$ \textbf{:=} $#2$ \textbf{in}}}
+
+\newcommand{\Suffix}[2]{#1 \preceq #2}
+\newcommand{\ProperSuffix}[2]{#1 \prec #2}
+
+% PEGs
+
+%% Syntax
+
+\newcommand{\PEmpty}[0]{\varepsilon}
+\newcommand{\PSet}[1]{[#1]}
+\newcommand{\PRange}[2]{\PSet{#1\text{--}#2}}
+\newcommand{\PSequence}[2]{#1\ #2}
+\newcommand{\PChoice}[2]{#1\ /\ #2}
+\newcommand{\PRepetition}[1]{#1^\star}
+\newcommand{\PNot}[1]{!#1}
+\newcommand{\PAnd}[1]{\&#1}
+\newcommand{\PNT}[1]{R_{#1}}
+\newcommand{\Rule}[2]{#1 \leftarrow #2}
+\newcommand{\POptional}[1]{#1?}
+\newcommand{\PPlus}[1]{#1^+}
+\newcommand{\PDot}[0]{.}
+
+%% Operators
+
+\newcommand{\length}[1]{|#1|}
+\newcommand{\size}[1]{||#1||}
+\newcommand{\dsqb}[1]{\llbracket #1 \rrbracket}
+
+%% Semantics
+
+\def\predicate#1{\xrightarrow{\mathit{#1}}}
+
+\DeclareMathOperator{\matches}{\predicate{m}}
+\def\Matches#1#2#3#4{(#1,#2,#3) \matches #4}
+\DeclareMathOperator{\Failure}{\bot}
+\def\DoesNotMatch#1#2#3{\Matches{#1}{#2}{#3}{\Failure}}
+\DeclareMathOperator{\matchescomp}{m_{comp}}
+
+\DeclareMathOperator{\coherent}{\predicate{c}}
+\def\Coherent#1#2#3{(#1,#2) \coherent #3}
+\newcommand{\coherentname}[0]{\text{coherent}}
+\newcommand{\coherentfunc}[2]{\coherentname{}\ #1\ #2}
+\DeclareMathOperator{\lcoherent}{\predicate{lc}}
+\newcommand{\lcoherentname}[0]{\text{lcoherent}}
+\newcommand{\lcoherentfunc}[2]{\lcoherentname{}\ #1\ #2}
+\newcommand{\lCoherent}[3]{(#1,#2) \lcoherent #3}
+
+\DeclareMathOperator{\verifyrule}{\predicate{vr}}
+\def\VerifyRule#1#2#3#4#5#6{(#1,#2,#3,#4) \verifyrule (#5,#6)}
+\newcommand{\verifyrulename}[0]{\text{verifyrule}}
+\newcommand{\verifyrulecomp}[5]{\verifyrulename{}\ #1\ #2\ #3\ #4\ #5}
+\DeclareMathOperator{\lverifyrule}{\predicate{lvr}}
+\newcommand{\lverifyrulename}[0]{\text{lverifyrule}}
+\newcommand{\lverifyrulecomp}[3]{\lverifyrulename{}\ #1\ #2\ #3}
+\newcommand{\lVerifyRule}[3]{(#1,#2) \lverifyrule #3}
+
+\DeclareMathOperator{\nullable}{\predicate{n}}
+\newcommand{\Nullable}[4]{(#1,#2,#3) \nullable #4}
+\newcommand{\nullablecomp}[4]{\text{nullable}\ #1\ #2\ #3\ #4}
+
+\DeclareMathOperator{\checkloops}{\predicate{cl}}
+\newcommand{\checkloopscomp}[4]{\text{checkloops}\ #1\ #2\ #3\ #4}
+\newcommand{\CheckLoops}[4]{(#1,#2,#3) \checkloops #4}
+\DeclareMathOperator{\lcheckloops}{\predicate{lcl}}
+\newcommand{\lcheckloopsname}[0]{\text{lcheckloops}}
+\newcommand{\lcheckloopscomp}[3]{\lcheckloopsname{}\ #1\ #2\ #3}
+\newcommand{\lCheckLoops}[3]{(#1,#2) \lcheckloops #3}
+
+\DeclareMathOperator{\verifygrammar}{\predicate{vg}}
+\newcommand{\verifygrammarname}[0]{verifygrammar}
+\newcommand{\verifygrammarcomp}[2]{\text{\verifygrammarname{}}\ #1\ #2}
+\newcommand{\VerifyGrammar}[2]{#1 \verifygrammar #2}
+\newcommand{\verifygrammargas}[1]{mingas_{vg}(#1)}
+
+\newcommand{\wf}[1]{\text{wf}\ #1}
+
+%% Optimizations
+
+% \DeclareMathOperator{\first}{\predicate{f}}
+\newcommand{\firstname}[0]{\mathcal{F}}
+\newcommand{\firstcomp}[4]{\firstname{}\ #1\ #2\ #3\ #4}
+% \newcommand{\First}[5]{(#1,#2,#3) \first (#4,#5)}
+\newcommand{\firstgas}[2]{mingas_{f}(#1, #2)}
+
+%% Sets
+
+\newcommand{\EmptySet}[0]{\varnothing}
+\newcommand{\Set}[1]{\{#1\}}
+\newcommand{\SetUnion}[2]{#1 \cup #2}
+\newcommand{\SetIntersection}[2]{#1 \cap #2}
+\newcommand{\SetMinus}[2]{#1 \setminus #2}
+
+% LPEG
+
+\newcommand{\lpeg}[0]{LPeg}

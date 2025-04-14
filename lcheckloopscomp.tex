@@ -1,0 +1,15 @@
+\begin{equation*}
+    \lcheckloopscomp{g}{rs}{gas} = \begin{aligned}[t]
+        & \matchwith{rs} \\
+        & \matchcase{nil}{\Some false} \\
+        & \matchcase{r::rs'}{\begin{aligned}[t]
+            & \letin{d}{\length{g}+1} \\
+            & \matchwith{\checkloopscomp{g}{r}{d}{gas}} \\
+            & \matchcase{\Some \Some false}{\lcheckloopscomp{g}{rs'}{gas}} \\
+            & \matchcase{\Some \Some true}{\Some true} \\
+            & \matchcase{res}{\None} \\
+            & \matchend{}
+        \end{aligned}} \\
+        & \matchend{}
+    \end{aligned}
+\end{equation*}

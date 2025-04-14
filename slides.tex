@@ -1,0 +1,463 @@
+\documentclass{beamer}
+\beamertemplatenavigationsymbolsempty
+\usetheme{Boadilla}
+
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{multirow}
+\usepackage{multicol}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{amsmath}
+\usepackage{verbatim}
+\usepackage{minted}
+\usetikzlibrary{automata, positioning, arrows}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{natbib}
+
+\usepackage{colortbl}
+\usepackage{numprint}
+\usepackage{textcomp}
+\usepackage{amssymb}
+\usepackage{amsthm} % theorems and lemmas
+\usepackage{mathpartir} % type inference rules
+\usepackage{lineno} % line numbers (good for reviewing)
+\usepackage{stmaryrd} % double square brackets
+\usepackage{mathtools}
+\usepackage{listings}
+\usepackage{wrapfig}
+
+% Define Lua blue
+\definecolor{LuaBlue}{RGB}{0, 0, 128}
+
+% Apply Lua blue to beamer structure
+\setbeamercolor{structure}{fg=LuaBlue}
+
+% % Uncomment the following lines for the production version
+% \setbeamertemplate{frametitle continuation}{\insertcontinuationcount}
+% \beamerdefaultoverlayspecification{<+->}
+
+\usetikzlibrary{positioning}
+
+\tikzset{
+    wf/.style={temporal={#1{}{color=orange}{color=cyan}}},
+    temporal/.code args={<#1>#2#3#4}{%
+      \temporal<#1>{\pgfkeysalso{#2}}{\pgfkeysalso{#3}}{\pgfkeysalso{#4}}
+    },
+}
+
+\input{macros}
+
+\title[Master's Thesis Defense]%
+{Formalization of Key Algorithms from \lpeg{}}
+
+\author[Guilherme Dantas]
+{Guilherme Dantas de Oliveira \texorpdfstring{\\ \vspace{10pt}}{and}
+\footnotesize Advisor: Roberto Ierusalimschy}
+
+\institute[PUC-Rio]%
+{Pontifical Catholic University of Rio de Janeiro}
+
+\date{April, 2025}
+
+\titlegraphic{
+    \includegraphics[height=1cm]{puc.pdf}
+    \hspace*{0.25cm}
+    \includegraphics[height=1cm]{di.pdf}
+    \includegraphics[height=1cm]{lablua.pdf}
+}
+
+\begin{document}
+
+\begin{frame}
+    \titlepage
+\end{frame}
+
+\begin{frame}{Introduction}
+    \begin{itemize}
+        \item Parsing Expression Grammars (PEGs)
+        \item \lpeg{}: PEGs for Lua
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Parsing Expression Grammars}
+    \begin{itemize}
+        \item A formal system for language recognition
+        \item Introduced by \cite{ford_parsing_2004}
+        \item Based on top-down language parsers
+        \item Deterministic, unlike context-free grammars
+        \item Recognize some non-context-free languages
+    \end{itemize}
+\end{frame}
+
+% \begin{frame}{Parsing Expressions (abstract syntax)}
+%     \begin{itemize}
+%         \item empty string $\PEmpty$
+%         \item terminals (e.g. $a$)
+%         \item non-terminals (e.g. $A$)
+%         \item zero-or-more repetitions $\PRepetition{e}$
+%         \item not-predicates $\PNot{e}$
+%         \item sequences $\PSequence{e_1}{e_2}$
+%         \item prioritized choices $\PChoice{e_1}{e_2}$
+%     \end{itemize}
+% \end{frame}
+
+\begin{frame}{Parsing Expressions}
+    \begin{itemize}
+        \item literal strings (e.g., ``if'', ``then'', ``else'')
+        \item character classes (e.g., \PRange{a}{z}, \PSet{0--9a--fA--F})
+        \item non-terminals
+        \item any character (dot)
+        \item optionals $\POptional{e}$
+        \item zero-or-more repetitions $\PRepetition{e}$
+        \item one-or-more repetitions $\PPlus{e}$
+        \item not-predicates $\PNot{e}$
+        \item and-predicates $\PAnd{e}$
+        \item sequences $\PSequence{e_1}{e_2}$
+        \item prioritized choices $\PChoice{e_1}{e_2}$
+    \end{itemize}
+\end{frame}
+
+\newcommand{\FordMatch}[4]{#1 \vdash (#2, #3) \rightsquigarrow #4}
+
+\begin{frame}{PEG Semantics: Match}
+    \begin{align*}
+        \FordMatch{G}{e_S}{s}{res}
+    \end{align*}
+\end{frame}
+
+\begin{frame}{Match Results}
+    \begin{itemize}
+        \item On success: the unconsumed input suffix
+        \begin{align*}
+            \FordMatch{G}{e_S}{s}{s'}
+        \end{align*}
+        \item On failure: nothing
+        \begin{align*}
+            \FordMatch{G}{e_S}{s}{\bot}
+        \end{align*}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Example of PEG}
+    \begin{itemize}
+        \item Let $G$ be a grammar with the following rules:
+        \begin{align*}
+            \Rule{A&}{\PChoice{\PSequence{a}{\PSequence{A}{b}}}{\PEmpty}} \\
+            \Rule{B&}{\PChoice{\PSequence{b}{\PSequence{B}{c}}}{\PEmpty}} \\
+            \Rule{D&}{\PSequence{\PAnd{(\PSequence{A}{\PNot{b}})}}{\PSequence{\PRepetition{a}}{\PSequence{B}{\PNot{\PDot{}}}}}}
+        \end{align*}
+        \item Then $G \vdash D$ recognizes the non-context-free language $a^n b^n c^n$
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Completeness}
+    \begin{align*}
+        & \text{$G \vdash e_S$ is complete} \\
+        & \iff \\
+        & \forall s,\ \exists res,\ \FordMatch{G}{e_S}{s}{res}
+    \end{align*}
+    \begin{itemize}
+        \item Proven to be \emph{undecidable} by \citeauthor{ford_parsing_2004}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Well-Formedness}
+    \begin{align*}
+        & \text{$G \vdash e_S$ is well-formed} \\
+        % & \iff \\
+        % & \text{$G \vdash e_S$ has no invalid non-terminal $\wedge$} \\
+        % & \text{$G \vdash e_S$ has no left-recursive rule $\wedge$} \\
+        % & \text{$G \vdash e_S$ has no degenerate loop} \\
+        & \implies \\
+        & \text{$G \vdash e_S$ is complete}
+    \end{align*}
+    \begin{itemize}
+        \item Fixed-point-based algorithm proposed by \cite{ford_parsing_2004}
+        \item Proven correct by \cite{koprowski_trx_2011}
+    \end{itemize}
+\end{frame}
+
+% \begin{frame}{Invalid non-terminals}
+%     \begin{align*}
+%         \{ \} \vdash \underline{S}
+%     \end{align*}
+%     \begin{align*}
+%         \{ \Rule{S}{\underline{A}} \} \vdash S
+%     \end{align*}
+% \end{frame}
+
+\begin{frame}{Left-Recursive Rules}
+    \begin{itemize}
+        \item Direct
+        \begin{align*}
+            \Rule{A}{\PChoice{\PSequence{A}{a}}{a}}
+        \end{align*}
+        \item Mutual
+        \begin{align*}
+            \begin{cases}
+               \Rule{A}{\PChoice{\PSequence{B}{a}}{a}} \\
+               \Rule{B}{\PChoice{\PSequence{A}{b}}{b}}
+            \end{cases}
+        \end{align*}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Degenerate Loops}
+    \begin{align*}
+        & \FordMatch{G}{e}{s}{s} \\
+        & \implies \\
+        & \nexists res,\ \FordMatch{G}{\PRepetition{e}}{s}{res} \\
+        & \implies \\
+        & \text{$G \vdash \PRepetition{e}$ is incomplete}
+    \end{align*}
+    \begin{itemize}
+        \item Examples:
+        \begin{itemize}
+            \item $\PRepetition{\PEmpty}$
+            \item $\PRepetition{(\POptional{e})}$
+            \item $\PRepetition{(\PNot{e})}$
+            \item $\PRepetition{(\PAnd{e})}$
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{\citeauthor{ford_parsing_2004}'s Well-Formedness Check}
+    \begin{center}
+        \begin{tikzpicture}%
+            [level distance=8mm, every node/.style={rectangle,draw}]
+            \node[wf=<7>] (A) {A}
+                child {
+                    node[wf=<6>] {/}
+                    child {
+                        node[wf=<5>] {;}
+                            child { node[wf=<2>] {a} }
+                            child { node[wf=<9>] {;}
+                                child { node[wf=<8>] {A} }
+                                child { node[wf=<2>] {b} }
+                            }
+                    }
+                    child { node[wf=<2>] {$\PEmpty$} }
+                } ;
+            \node[right=30mm of A, wf=<7>] (B) {B}
+                child {
+                    node[wf=<6>] {/}
+                    child {
+                        node[wf=<5>] {;}
+                            child { node[wf=<2>] {b} }
+                            child { node[wf=<9>] {;}
+                                child { node[wf=<8>] {B} }
+                                child { node[wf=<2>] {c} }
+                            }
+                    }
+                    child { node[wf=<2>] {$\PEmpty$} }
+                } ;
+            \node[right=30mm of B, wf=<12>] {D}
+                child [sibling distance=20mm] {
+                    node[wf=<11>] {;}
+                    child {
+                        node[wf=<10>] {$\&$}
+                        child [sibling distance=10mm] {
+                            node[wf=<9>] {;}
+                            child { node[wf=<8>] {A} }
+                            child {
+                                node[wf=<4>] {!}
+                                child { node[wf=<2>] {b} }
+                            }
+                        }
+                    }
+                    child {
+                        node[wf=<10>] {;}
+                        child [sibling distance=10mm] {
+                            node[wf=<3>] {$*$}
+                            child { node[wf=<2>] {a} }
+                        }
+                        child [sibling distance=20mm] {
+                            node[wf=<9>] {;}
+                            child [sibling distance=10mm] { node[wf=<8>] {B} }
+                            child [sibling distance=10mm] {
+                                node[wf=<4>] {!}
+                                child { node[wf=<2>] {.} }
+                            }
+                        }
+                    }
+                } ;
+        \end{tikzpicture}
+        
+        \vspace{10pt}
+        \begin{overlayarea}{\textwidth}{40pt}
+            \begin{itemize}
+                \only<1>{\item The example PEG for the language $a^n b^n c^n$ in tree form.}
+                \only<2>{\item Empty $\PEmpty$, terminals $a, b, c$, and dot are WF.}
+                \only<3>{\item Terminal $a$ is non-nullable, so $\PRepetition{a}$ is WF.}
+                \only<4>{\item Not-predicates $\PNot{b}$ and $\PNot{\PDot{}}$ are WF.}
+                \only<5>{\item Terminal $a$ is non-nullable, so the sequence $aAb$ is WF.
+                \item The same goes for terminal $b$ and sequence $bBc$.}
+                \only<6>{\item Choices $aAb/\PEmpty$ and $bBc/\PEmpty$ are WF.}
+                \only<7>{\item Rules $A$ and $B$ are WF.}
+                \only<8>{\item Non-terminals $A$ and $B$ are WF.}
+                \only<9>{\item Sequences $Ab$, $Bc$, $A\PNot{b}$, and $B\PNot{\PDot}$ are WF.}
+                \only<10>{\item And-predicate $\PAnd{(A\PNot{b})}$ is WF.
+                \item Sequence $\PSequence{\PRepetition{a}}{B\PNot{\PDot}}$ is WF.}
+                \only<11>{\item Sequence $\PAnd{(A\PNot{b})}\PSequence{\PRepetition{a}}{B\PNot{\PDot}}$ is WF.}
+                \only<12>{\item Rule $D$ is WF.}
+                \only<13>{\item Fixed point reached.
+                \item All subexpressions are WF, so the grammar is WF.}
+            \end{itemize}
+        \end{overlayarea}
+    \end{center}
+\end{frame}
+
+\begin{frame}{\lpeg{}}
+    \begin{columns}
+        \begin{column}{0.7\textwidth}
+            \begin{itemize}
+                \item An implementation of PEGs for Lua
+                \item Developed by \cite{ierusalimschy_text_2009}
+                \item Features...
+                \begin{itemize}
+                    \item patterns as \emph{first-class citizens}
+                    \item a specialized virtual machine
+                    \item several interesting algorithms
+                \end{itemize}
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.3\textwidth}
+            \begin{figure}
+                \centering
+                \includegraphics[width=0.8\textwidth]{lpeg.pdf}
+            \end{figure}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Key Algorithms From \lpeg{}}
+    \begin{itemize}
+        \item Well-Formedness Check
+        \item First-set Computation
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{\lpeg{}'s Well-Formedness Check}
+    \begin{itemize}
+        \item Ensures that patterns are complete
+        \item Implemented in~C using simple data structures
+        \item Different from the original algorithm by \citeauthor{ford_parsing_2004}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}{\lpeg{}'s Well-Formedness Check}
+    \begin{center}
+        \begin{tikzpicture}%
+            [level distance=8mm, every node/.style={rectangle,draw}]
+            \node[wf=<6>] (A) {A}
+                child {
+                    node[wf=<5>] {/}
+                    child {
+                        node[wf=<3>] {;}
+                            child { node[wf=<2>] {a} }
+                            child { node {;}
+                                child { node {A} }
+                                child { node {b} }
+                            }
+                    }
+                    child { node[wf=<4>] {$\PEmpty$} }
+                } ;
+            \node[right=30mm of A, wf=<7>] (B) {B}
+                child {
+                    node[wf=<7>] {/}
+                    child {
+                        node[wf=<7>] {;}
+                            child { node[wf=<7>] {b} }
+                            child { node {;}
+                                child { node {B} }
+                                child { node {c} }
+                            }
+                    }
+                    child { node[wf=<7>] {$\PEmpty$} }
+                } ;
+            \node[right=30mm of B] {D}
+                child [sibling distance=20mm] {
+                    node {;}
+                    child {
+                        node[wf=<12>] {$\&$}
+                        child [sibling distance=10mm] {
+                            node[wf=<11>] {;}
+                            child { node[wf=<8>] {A} }
+                            child {
+                                node[wf=<10>] {!}
+                                child { node[wf=<9>] {b} }
+                            }
+                        }
+                    }
+                    child {
+                        node {;}
+                        child [sibling distance=10mm] {
+                            node[wf=<14>] {$*$}
+                            child { node[wf=<13>] {a} }
+                        }
+                        child [sibling distance=20mm] {
+                            node[wf=<18>] {;}
+                            child [sibling distance=10mm] { node[wf=<15>] {B} }
+                            child [sibling distance=10mm] {
+                                node[wf=<17>] {!}
+                                child { node[wf=<16>] {.} }
+                            }
+                        }
+                    }
+                } ;
+        \end{tikzpicture}
+        
+        \vspace{10pt}
+        \begin{overlayarea}{\textwidth}{40pt}
+            \begin{itemize}
+                \only<1>{\item The example PEG for the language $a^n b^n c^n$ in tree form.}
+                \only<2>{\item Terminal $a$ is non-nullable.}
+                \only<3>{\item Sequence $aAb$ is non-nullable.}
+                \only<4>{\item Empty $\PEmpty$ is nullable.}
+                \only<5>{\item Choice $aAb/\PEmpty$ is nullable.}
+                \only<6>{\item Rule $A$ is nullable.}
+                \only<7>{\item Rule $B$ is also nullable, by symmetry.}
+                \only<8>{\item Non-terminal $A$ is nullable.}
+                \only<9>{\item Terminal $b$ is non-nullable.}
+                \only<10>{\item Not-predicate $\PNot{b}$ is nullable.}
+                \only<11>{\item Sequence $A\PNot{b}$ is nullable.}
+                \only<12>{\item And-predicate $\PAnd{(A\PNot{b})}$ is nullable.}
+                \only<13>{\item Terminal $a$ is non-nullable.}
+                \only<14>{\item Repetition $\PRepetition{a}$ is nullable.}
+                \only<15>{\item Non-terminal $B$ is nullable.}
+                \only<16>{\item Dot is non-nullable.}
+                \only<17>{\item Not-predicate $\PNot{\PDot}$ is nullable.}
+                \only<18>{\item Sequence $B\PNot{\PDot}$ is nullable.}
+            \end{itemize}
+        \end{overlayarea}
+    \end{center}
+\end{frame}
+
+\begin{frame}{First-Set Computation}
+    \begin{itemize}
+        \item Concept imported from $LL(k)$ parsers
+        \item Indicates which first characters make a pattern fail \\
+        and whether the pattern fails for the empty string
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Related Work}
+\end{frame}
+
+\begin{frame}{Conclusion}
+\end{frame}
+
+% Hide bibliography
+\begin{frame}<beamer:0>
+    \bibliographystyle{apalike}
+    \bibliography{references}
+\end{frame}
+
+\end{document}

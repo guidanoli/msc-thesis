@@ -1,0 +1,53 @@
+\begin{mathpar}
+    \namedinferrule{n-eps}
+    { }
+    {\Nullable{g}{\PEmpty}{d}{\Some true}}
+
+    \namedinferrule{n-set}
+    { }
+    {\Nullable{g}{\PSet{cs}}{d}{\Some false}}
+
+    \namedinferrule{n-rep}
+    { }
+    {\Nullable{g}{\PRepetition{p}}{d}{\Some true}}
+
+    \namedinferrule{n-not}
+    { }
+    {\Nullable{g}{\PNot{p}}{d}{\Some true}}
+
+    \namedinferrule{n-and}
+    { }
+    {\Nullable{g}{\PAnd{p}}{d}{\Some true}}
+
+    \namedinferrule{n-nonterminal-zero}
+    {g[i] = \Some p}
+    {\Nullable{g}{\PNT{i}}{0}{\None}}
+    
+    \namedinferrule{n-nonterminal-succ}
+    {g[i] = \Some p \\ \Nullable{g}{p}{d}{res}}
+    {\Nullable{g}{\PNT{i}}{1+d}{res}}
+
+    \namedinferrule{n-seq-none}
+    {\Nullable{g}{p_1}{d}{\None}}
+    {\Nullable{g}{\PSequence{p_1}{p_2}}{d}{\None}}
+    
+    \namedinferrule{n-seq-some-false}
+    {\Nullable{g}{p_1}{d}{\Some false}}
+    {\Nullable{g}{\PSequence{p_1}{p_2}}{d}{\Some false}}
+    
+    \namedinferrule{n-seq-some-true}
+    {\Nullable{g}{p_1}{d}{\Some true} \\ \Nullable{g}{p_2}{d}{res}}
+    {\Nullable{g}{\PSequence{p_1}{p_2}}{d}{res}}
+
+    \namedinferrule{n-choice-none}
+    {\Nullable{g}{p_1}{d}{\None}}
+    {\Nullable{g}{\PChoice{p_1}{p_2}}{d}{\None}}
+    
+    \namedinferrule{n-choice-some-false}
+    {\Nullable{g}{p_1}{d}{\Some false} \\ \Nullable{g}{p_2}{d}{res}}
+    {\Nullable{g}{\PChoice{p_1}{p_2}}{d}{res}}
+    
+    \namedinferrule{n-choice-some-true}
+    {\Nullable{g}{p_1}{d}{\Some true}}
+    {\Nullable{g}{\PChoice{p_1}{p_2}}{d}{\Some true}}
+\end{mathpar}

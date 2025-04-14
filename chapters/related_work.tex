@@ -1,0 +1,75 @@
+\chapter{Related Work}
+\label{chapter:related-work}
+
+Ford~\cite{ford_parsing_2004} introduced PEGs
+and provided initial theoretical results about them.
+He proved that the problem of knowing whether
+a PEG is complete is undecidable,
+and presented \emph{well-formedness}
+as a conservative approximation to completeness.
+In this approximation,
+he defined the conservative notion of \emph{nullable} expressions,
+which can accept an input string without consuming any characters.
+
+Ribeiro et al.~\cite{ribeiro_towards_2019}
+formalized the syntax and semantics of PEGs
+using the Agda proof assistant.
+They also formalized the well-formedness verification process
+in a way similar to a typing procedure.
+Expressions are typed according to the set of nonterminals that can
+be reached without consuming any character
+(called \emph{head-set})
+and whether the expression is nullable,
+following Ford's definition.
+
+The most interesting restrictions in this typing
+are those on nonterminal expressions and repetitions.
+For nonterminals, the typing
+prohibits the nonterminal itself from being contained in its head-set.
+For repetitions $\PRepetition{p}$, it prohibits $p$ from being nullable.
+Although correct, this method does not provide a direct algorithm for this verification, instead relying on a typing algorithm.
+
+Koprowski et al.~\cite{koprowski_trx_2011} developed TRX,
+a parser interpreter formalized using the Coq proof assistant.
+Their work extended PEGs to support semantic values and actions,
+and focused on extracting parsers from them
+with proofs of termination and correctness.
+
+They formalized a well-formedness check for these extended PEGs
+that is largely based on Ford's original work:
+The algorithm iteratively computes
+a set of well-formed expressions
+until a fixed-point is reached,
+and then checks if this set
+coincides with the expression set of the grammar.
+Although proven correct,
+this algorithm seems harder to implement
+using low-level programming languages,
+when compared to the algorithm implemented in \lpeg{},
+which is written in~C in order to better interact with the Lua C~API.
+
+Blaudeau et al.~\cite{blaudeau_verified_2020} specified
+a verified packrat parser interpreter for PEGs in PVS,
+emphasizing the formal verification of the parsing process.
+In order for their algorithm to correctly detect left recursion,
+they assume there exists a correct order for visiting non-terminals.
+However, they do not provide an algorithm for computing such an order.
+
+In contrast, our work presents a direct and practical algorithm
+for verifying the well-formedness of PEGs.
+By providing concrete implementation details,
+we offer a more straightforward approach
+to well-formedness verification compared
+to the formal proof-based methods of the aforementioned works.
+
+Another contribution of our work
+is the formalization of the first-set algorithm implemented in \lpeg{}.
+Although the concept of first-sets is well-established
+in the area of context-free grammars~%
+\cite{chomsky_three_1956},
+to the extent of our knowledge
+their application in PEGs has not been documented yet.
+We proved the key properties of the first-set algorithm,
+and the soundness of its application in \lpeg{},
+as an optimization technique
+during the code generation phase.

@@ -1,0 +1,96 @@
+\section{References to nonexistent rules}
+\label{section:coherent}
+
+The verification process
+starts by checking whether
+every nonterminal pattern references
+an existing rule in the grammar.
+This process is quite simple,
+but we present it here in the name of completeness.
+
+We say a pattern is
+\emph{coherent} in respect to a grammar
+if all of its nonterminals reference existing rules in the grammar.
+\Cref{fig:coherentfunc}
+defines a fixed-point function
+that performs this verification.
+\begin{figure}
+    \centering
+    \input{coherentfunc}
+    \caption{The coherence function.}
+    \label{fig:coherentfunc}
+\end{figure}
+To aid us in later induction proofs,
+we also define an equivalent predicate in \Cref{fig:coherent}.
+\Cref{lemma:coherent-deterministic} states
+that the predicate is deterministic on the result,
+and \Cref{lemma:coherent-follows} states that
+the predicate follows the function.
+It is easy to see that
+both lemmas together imply that the
+predicate is equivalent to the function.
+
+\begin{figure}
+    \input{coherent}
+    \caption{The coherence predicate.}
+    \label{fig:coherent}
+\end{figure}
+
+% TODO: reduce these to just one lemma as A <-> B ?
+
+\begin{lemma}
+    \label{lemma:coherent-deterministic}
+    If $\Coherent{g}{p}{res_1}$ and $\Coherent{g}{p}{res_2}$,
+    then $res_1 = res_2$.
+\end{lemma}
+
+\begin{lemma}
+    \label{lemma:coherent-follows}
+    If $\coherentfunc{g}{p} = res$, then $\Coherent{g}{p}{res}$.
+\end{lemma}
+
+\Cref{fig:lcoherent-function} trivially generalizes the coherence check for a list of patterns.
+\begin{figure}
+    \centering
+    \include{lcoherentfunc}
+    \caption{The coherence function for lists of patterns.}
+    \label{fig:lcoherent-function}
+\end{figure}
+This function is defined over an arbitrary list of rules,
+but is meant to be called for the whole grammar.
+We also define, in \Cref{fig:lcoherent}, an inductive predicate
+equivalent to this function to be
+later used in proofs by induction.
+\begin{figure}
+    \centering
+    \input{lcoherent}
+    \caption{The coherence predicate for lists of patterns.}
+    \label{fig:lcoherent}
+\end{figure}
+We also show that this predicate
+is deterministic and follows
+the original fixed-point definition.
+See \Cref{lemma:lcoherent-determinism,lemma:lcoherent-follows}.
+
+\begin{lemma}
+    If $\lCoherent{g}{rs}{res_1}$,
+    and $\lCoherent{g}{rs}{res_2}$,
+    then $res_1 = res_2$.
+    \label{lemma:lcoherent-determinism}
+\end{lemma}
+
+\begin{lemma}
+    If $\lcoherentfunc{g}{rs} = res$,
+    then $\lCoherent{g}{rs}{res}$.
+    \label{lemma:lcoherent-follows}
+\end{lemma}
+
+Finally, we prove that
+if a list of patterns passes the list-based check,
+then any pattern in the list passes the individual check.
+
+\begin{lemma}%[Coherent List Safety]
+    \label{lemma:lcoherent-safety}
+    If $\lCoherent{g}{rs}{true}$,
+    then, $\forall r \in rs, \Coherent{g}{r}{true}$.
+\end{lemma}

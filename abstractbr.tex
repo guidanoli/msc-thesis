@@ -1,0 +1,24 @@
+Gramáticas de Análise Sintática de Expressão
+(PEGs, do inglês Parsing Expression Languages) são uma classe de
+gramáticas formais determinísticas originalmente descritas por Ford e
+amplamente utilizadas para descrever e analisar linguagens de programação.
+PEGs foram implementadas por diversos projetos. Um desses projetos é \lpeg{},
+uma biblioteca Lua que compila PEGs para código otimizado que é executado
+por uma máquina virtual especializada.
+
+A implementação de \lpeg{} apresenta dois algoritmos-chave
+que nunca foram publicados ou verificados formalmente.
+Primeiramente, \lpeg{} possui sua própria
+implementação da verificação de boa-formação introduzida por Ford, essencial
+para garantir que a análise sintática termine.
+Em segundo lugar, \lpeg{} implementa um algoritmo que computa
+o conjunto de primeiros caracteres que
+podem ser aceitos por um padrão, utilizado para gerar código de
+máquina virtual mais eficiente para certos padrões.
+
+Este trabalho formaliza esses algoritmos
+e prova que estão corretos usando o
+provador de teoremas Coq.
+Além disso, provamos que esses algoritmos
+terminam utilizando uma
+abordagem baseada em consumo de gás.

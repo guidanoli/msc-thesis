@@ -1,0 +1,44 @@
+\begin{align*}
+    \begin{aligned}[t]
+        & \verifyrulecomp{g}{p}{d}{nb}{0} = \None \\
+        & \verifyrulecomp{g}{p}{d}{nb}{(1+gas)} = \\
+        & \begin{aligned}[t]
+            & \matchwith{p} \\
+            & \matchcase{\PEmpty}{\Some(\Some true, nil)} \\
+            & \matchcase{\PSet{cs}}{\Some(\Some nb, nil)} \\
+            & \matchcase{\PRepetition{p'}}{\verifyrulecomp{g}{p'}{d}{true}{gas}} \\
+            & \matchcase{\PNot{p'}}{\verifyrulecomp{g}{p'}{d}{true}{gas}} \\
+            & \matchcase{\PAnd{p'}}{\verifyrulecomp{g}{p'}{d}{true}{gas}} \\
+            & \matchcase{\PNT{i}}{\begin{aligned}[t]
+                & \matchwith{g[i]} \\
+                & \matchcase{\None}{\None} \\
+                & \matchcase{\Some p'}{\begin{aligned}[t]
+                    & \matchwith{d} \\
+                    & \matchcase{0}{\Some(\None, nil)} \\
+                    & \matchcase{1+d'}{\begin{aligned}[t]
+                        & \matchwith{\verifyrulecomp{g}{p'}{d'}{nb}{gas}} \\
+                        & \matchcase{\Some (res, k)}{\Some (res, i :: k)} \\
+                        & \matchcase{\None}{\None} \\
+                        & \matchend{}
+                    \end{aligned}} \\
+                    & \matchend{}
+                \end{aligned}} \\
+                & \matchend{}
+            \end{aligned}} \\
+            & \matchcase{\PSequence{p_1}{p_2}}{\begin{aligned}[t]
+                & \matchwith{\verifyrulecomp{g}{p_1}{d}{false}{gas}} \\
+                & \matchcase{\Some(\Some true, k)}{\verifyrulecomp{g}{p_2}{d}{nb}{gas}} \\
+                & \matchcase{\Some(\Some false, k)}{\Some(\Some nb, k)} \\
+                & \matchcase{res}{res} \\
+                & \matchend{}
+            \end{aligned}} \\
+            & \matchcase{\PChoice{p_1}{p_2}}{\begin{aligned}[t]
+                & \matchwith{\verifyrulecomp{g}{p_1}{d}{nb}{gas}} \\
+                & \matchcase{\Some(\Some nb', k)}{\verifyrulecomp{g}{p_2}{d}{nb'}{gas}} \\
+                & \matchcase{res}{res} \\
+                & \matchend{}
+            \end{aligned}} \\
+            & \matchend{}
+        \end{aligned}
+    \end{aligned}
+\end{align*}

@@ -1,0 +1,55 @@
+\chapter{Conclusion}
+\label{chapter:conclusion}
+
+In this work,
+we formalized two key algorithms implemented in \lpeg{}:
+the well-formedness check and the first-set computation.
+Both algorithms were defined as functions in Coq
+using a fixed-point construction,
+with the recursion being defined on a gas parameter.
+We proved that both algorithms terminate
+by providing a lower bound for the gas parameter.
+While the well-formedness check guarantees
+this property for any input PEG,
+the first-set computation assumes
+the input PEG has successfully passed the well-formedness check.
+
+Besides proving their termination,
+we have proved these algorithms are correct,
+in their own respective ways.
+For the well-formedness check,
+we have proved that it correctly detects complete PEGs,
+which, in turn, guarantees that parsing terminates.
+Meanwhile, for the first-set algorithm,
+we have proven that it computes the set of first characters that make a pattern fail,
+and that it checks whether the pattern fails for the empty string.
+
+Moreover,
+we used the properties of the first-set algorithm
+to prove that an optimization performed by \lpeg{}
+on certain choice patterns is correct.
+This optimization is also performed on other types
+of patterns, but we leave the proof of their correctness
+as a topic for future research.
+
+Still on the topic of future research,
+while formalizing these algorithms,
+we identified some details that deserve future review,
+as they could lead to future improvements in \lpeg{}.
+In the particular case of the first-set algorithm,
+we modified the definition for the and-predicate pattern $\PAnd{p}$
+so that we would be able to prove the key properties of the algorithm.
+Future research should investigate whether it would be possible
+to prove these properties for the actual implementation in \lpeg{}.
+Furthermore, we suspect the case of the pattern $\PNot{\PSet{cs}}$
+could be reviewed to make the first-set even smaller,
+and, therefore, more likely to be used in optimizations.
+
+Future work may also seek to measure the
+computational and space complexity
+of these algorithm in terms of
+some notion of grammar size,
+such as the total number of nodes
+in the abstract syntax tree of rules.
+Such measurements may even help us
+find opportunities for improvements.

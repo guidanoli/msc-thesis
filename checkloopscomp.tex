@@ -1,0 +1,33 @@
+\begin{align*}
+    \begin{aligned}[t]
+        & \checkloopscomp{g}{p}{d}{0} = \None \\
+        & \checkloopscomp{g}{p}{d}{(1+gas)} = \\
+        & \begin{aligned}[t]
+            & \matchwith{p} \\
+            & \matchcase{\PEmpty}{\Some \Some false} \\
+            & \matchcase{\PSet{cs}}{\Some \Some false} \\
+            & \matchcase{\PNT{i}}{\Some \Some false} \\
+            & \matchcase{\PNot{p}}{\checkloopscomp{g}{p}{d}{gas}} \\
+            & \matchcase{\PAnd{p}}{\checkloopscomp{g}{p}{d}{gas}} \\
+            & \matchcase{\PRepetition{p}}{\begin{aligned}[t]
+                & \matchwith{\nullablecomp{g}{p}{d}{gas}} \\
+                & \matchcase{\Some \Some false}{\checkloopscomp{g}{p}{d}{gas}} \\
+                & \matchcase{res}{res} \\
+                & \matchend{}
+            \end{aligned}} \\
+            & \matchcase{\PSequence{p_1}{p_2}}{\begin{aligned}[t]
+                & \matchwith{\checkloopscomp{g}{p_1}{d}{gas}} \\
+                & \matchcase{\Some \Some false}{\checkloopscomp{g}{p_2}{d}{gas}} \\
+                & \matchcase{res}{res} \\
+                & \matchend{}
+            \end{aligned}} \\
+            & \matchcase{\PChoice{p_1}{p_2}}{\begin{aligned}[t]
+                & \matchwith{\checkloopscomp{g}{p_1}{d}{gas}} \\
+                & \matchcase{\Some \Some false}{\checkloopscomp{g}{p_2}{d}{gas}} \\
+                & \matchcase{res}{res} \\
+                & \matchend{}
+            \end{aligned}} \\
+            & \matchend{}
+        \end{aligned}
+    \end{aligned}
+\end{align*}

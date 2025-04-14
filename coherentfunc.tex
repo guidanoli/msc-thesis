@@ -1,0 +1,24 @@
+\begin{align*}
+    \begin{aligned}[t]
+        & \coherentfunc{g}{p} = \\
+        & \begin{aligned}[t]
+            & \matchwith{p} \\
+            & \matchcase{\PEmpty}{true} \\
+            & \matchcase{\PSet{cs}}{true} \\
+            & \matchcase{\PNT{i}}{\begin{aligned}[t]
+                & \matchwith{g[i]} \\
+                & \matchcase{\Some p}{true} \\
+                & \matchcase{\None}{false} \\
+                & \matchend{}
+            \end{aligned}} \\
+            & \matchcase{\PRepetition{p}}{\coherentfunc{g}{p}} \\
+            & \matchcase{\PNot{p}}{\coherentfunc{g}{p}} \\
+            & \matchcase{\PAnd{p}}{\coherentfunc{g}{p}} \\
+            & \matchcase{\PSequence{p_1}{p_2}}
+                {\coherentfunc{g}{p_1} \wedge \coherentfunc{g}{p_2}} \\
+            & \matchcase{\PChoice{p_1}{p_2}}
+                {\coherentfunc{g}{p_1} \wedge \coherentfunc{g}{p_2}} \\
+            & \matchend{}
+        \end{aligned}
+    \end{aligned}
+\end{align*}

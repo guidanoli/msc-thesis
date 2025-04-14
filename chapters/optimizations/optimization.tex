@@ -1,0 +1,73 @@
+\section{Application in \lpeg{}}
+
+Having proved the key properties of the first-set algorithm,
+we would like to formalize its application in \lpeg{}.
+As discussed at the beginning of this chapter,
+\lpeg{} uses this algorithm
+when generating code for choice patterns,
+making use of test-set instructions.
+Despite this optimization occurring at the virtual machine code level,
+we would like to formalize it at the syntactic level.
+
+\newcommand{\ifthenelsepat}[3]{\PChoice{\PSequence{\PAnd{#1}}{#2}}{\PSequence{\PNot{#1}}{#3}}}
+
+The test-set instruction basically checks
+whether the input string
+starts with a character in a given set $\Set{cs}$,
+jumping to a given label if it does not.
+We can check the first character of the input string
+through the character set pattern $\PSet{cs}$,
+and emulate the logic of
+``if $p_{cond}$ matches, then try $p_1$, otherwise try $p_2$''
+through the following pattern construction.
+\begin{align*}
+    \ifthenelsepat{p_{cond}}{p_1}{p_2}
+\end{align*}
+
+In the optimized code of the choice pattern,
+the test-instruction checks if the input string
+starts with a character in the first-set of $p_1$,
+and jumps to the code of $p_2$ if it does not.
+This instruction is followed by the code of $p_1$,
+which is executed if the check succeeds.
+We can represent this optimized code
+as the following pattern.
+Let $\Set{first_1}$ denote the first-set of $p_1$.
+\begin{align*}
+    \ifthenelsepat{\PSet{first_1}}{p_1}{p_2}
+\end{align*}
+
+We now prove the correctness of this optimization.
+Assuming the grammar $g$ and patterns $p_1$ and $p_2$ are well-formed,
+and that the first-sets of $p_1$ and $p_2$ are disjoint,
+and that the emptiness value of $p_1$ is $false$,
+we first prove that if the original choice pattern matches a string $s$,
+the optimized choice also matches $s$,
+yielding the same unconsumed suffix $s'$.
+We also need to assume that $s'$
+either is empty or starts with a character in the
+follow-set of $p_2$.
+
+\begin{lemma}
+If $g$, $p_1$ and $p_2$ are well-formed, \\
+and $s'$ either is empty or starts with $x \in follow$, \\
+and $\firstcomp{g}{p_1}{\Sigma}{gas_1} = \Some (false, first_1)$, \\
+and $\firstcomp{g}{p_2}{follow}{gas_2} = \Some (b, first_2)$, \\
+and $\SetIntersection{first_1}{first_2} = \EmptySet{}$, \\
+and $\Matches{g}{\PChoice{p_1}{p_2}}{s}{s'}$, \\
+then $\Matches{g}{\ifthenelsepat{\PSet{first_1}}{p_1}{p_2}}{s}{s'}$.
+\end{lemma}
+
+As for the case in which the choice fails,
+we also show the optimized choice fails as well.
+The proof follows from two facts:
+The choice fails either because of $p_1$ or $p_2$;
+And, for any input string,
+either $\PAnd{\PSet{first_1}}$ matches
+and $\PNot{\PSet{first_1}}$ fails,
+or the other way around.
+
+\begin{lemma}
+If $\Matches{g}{\PChoice{p_1}{p_2}}{s}{\Failure}$, \\
+then $\Matches{g}{\ifthenelsepat{\PSet{first_1}}{p_1}{p_2}}{s}{\Failure}$.
+\end{lemma}

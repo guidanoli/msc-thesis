@@ -1,0 +1,49 @@
+\begin{mathpar}
+    \namedinferrule{v-eps}
+    { }
+    {\VerifyRule{g}{\PEmpty}{d}{nb}{\Some true}{nil}}
+
+    \namedinferrule{v-set}
+    { }
+    {\VerifyRule{g}{\PSet{cs}}{d}{nb}{\Some nb}{nil}}
+
+    \namedinferrule{v-nonterminal-zero}
+    { }
+    {\VerifyRule{g}{\PNT i}{0}{nb}{\None}{nil}}
+
+    \namedinferrule{v-nonterminal-succ}
+    {g[i] = \Some p \\ \VerifyRule{g}{p}{d}{nb}{res}{k}}
+    {\VerifyRule{g}{\PNT i}{d+1}{nb}{res}{i :: k}}
+
+    \namedinferrule{v-rep}
+    {\VerifyRule{g}{p}{d}{true}{res}{k}}
+    {\VerifyRule{g}{\PRepetition p}{d}{nb}{res}{k}}
+
+    \namedinferrule{v-not}
+    {\VerifyRule{g}{p}{d}{true}{res}{k}}
+    {\VerifyRule{g}{\PNot p}{d}{nb}{res}{k}}
+
+    \namedinferrule{v-and}
+    {\VerifyRule{g}{p}{d}{true}{res}{k}}
+    {\VerifyRule{g}{\PAnd p}{d}{nb}{res}{k}}
+
+    \namedinferrule{v-seq1}
+    {\VerifyRule{g}{p_1}{d}{false}{\None}{k}}
+    {\VerifyRule{g}{\PSequence{p_1}{p_2}}{d}{nb}{\None}{k}}
+
+    \namedinferrule{v-seq2}
+    {\VerifyRule{g}{p_1}{d}{false}{\Some false}{k}}
+    {\VerifyRule{g}{\PSequence{p_1}{p_2}}{d}{nb}{\Some nb}{k}}
+
+    \namedinferrule{v-seq3}
+    {\VerifyRule{g}{p_1}{d}{false}{\Some true}{k_1} \\ \VerifyRule{g}{p_2}{d}{nb}{res}{k_2}}
+    {\VerifyRule{g}{\PSequence{p_1}{p_2}}{d}{nb}{res}{k_2}}
+
+    \namedinferrule{v-choice1}
+    {\VerifyRule{g}{p_1}{d}{nb}{\None}{k}}
+    {\VerifyRule{g}{\PChoice{p_1}{p_2}}{d}{nb}{\None}{k}}
+
+    \namedinferrule{v-choice2}
+    {\VerifyRule{g}{p_1}{d}{nb}{\Some nb'}{k_1} \\ \VerifyRule{g}{p_2}{d}{nb'}{res}{k_2}}
+    {\VerifyRule{g}{\PChoice{p_1}{p_2}}{d}{nb}{res}{k_2}}
+\end{mathpar}

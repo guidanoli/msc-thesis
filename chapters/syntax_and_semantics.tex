@@ -1,0 +1,402 @@
+\chapter{Syntax and Semantics of PEGs}
+\label{chapter:pegs}
+
+When Ford~\cite{ford_parsing_2004} introduced PEGs,
+he also defined a syntax
+with several useful constructions
+for practical language description purposes:
+literal strings (e.g. ``abc''),
+character classes (e.g. $\PRange{a}{z}$), any character ($\PDot{}$),
+optionals $\POptional{p}$, zero-or-more repetitions $\PRepetition{p}$,
+one-or-more repetitions $\PPlus{p}$, not-predicates $\PNot{p}$,
+and-predicates $\PAnd{p}$, sequences $\PSequence{p_1}{p_2}$,
+and ordered choices $\PChoice{p_1}{p_2}$.
+
+However, for the purposes of formal analysis,
+Ford realized it would be more
+convenient to define an abstract syntax for PEGs
+that represents its essential structure.
+This abstract syntax does not include
+several aforementioned constructions,
+which are treated as \emph{syntactic sugar},
+and includes two new constructions:
+empty ($\PEmpty$) and single characters (e.g. `a').
+
+With these new constructions,
+Ford \emph{desugars} the PEG syntax as follows.
+First, the any-character pattern ($\PDot{}$) is reduced
+into a character class with all characters in the alphabet.
+Then, literal strings are reduced into sequences of characters,
+and character classes are reduced into choices of characters.
+And-predicate patterns $\PAnd{p}$ are reduced into $\PNot{(\PNot{p})}$,
+optionals $\POptional{p}$ into $\PChoice{p}{\PEmpty}$,
+and one-or-more repetitions $\PPlus{p}$ into $\PSequence{p}{\PRepetition{p}}$.
+
+This desugared syntax allowed Ford to reduce the size of proofs,
+as there were fewer cases to be treated during case analysis.
+However, for the purposes of formalizing the first-set algorithm,
+we realized it would be beneficial for us to have our own
+desugaring of the PEG syntax.
+Compared to Ford's desugared syntax,
+\emph{our} desugared syntax
+includes and-predicates $\PAnd{p}$
+and replaces characters (e.g. `a')
+with character sets (e.g. $\PRange{a}{z}$).
+
+Characters and character sets
+have equivalent expressiveness,
+as character sets can be reduced into choices of characters.
+However, in our case, we prefer character sets as they allow us to
+simplify the definition of the first-set algorithm.
+Moreover, we decided to keep and-predicates $\PAnd{p}$
+to stay more loyal to the implementation of \lpeg{},
+which doesn't treat $\PAnd{p}$ as syntactic sugar for $\PNot{(\PNot{p})}$
+and handles them differently in the first-set algorithm.
+Our desugared syntax is depicted in \Cref{fig:syntax}.
+\begin{figure}[t]
+    \centering
+    \input{syntax}
+    \caption{Our desugared syntax of PEGs.}
+    \label{fig:syntax}
+\end{figure}
+
+Having defined the syntax of PEGs,
+we now define their semantics.
+In the context of a grammar,
+a pattern is parsed against an input string,
+and the match may be either a success or a failure.
+In the case of a success,
+the pattern leaves the unconsumed suffix
+of the input string as a result.
+
+To be more precise,
+we define a match predicate.
+The predicate
+takes a grammar $g$,
+a pattern $p$,
+and an input string $s$,
+and returns a match result $res$.
+It is denoted as $\Matches{g}{p}{s}{res}$.
+A successful match result is represented by $s'$,
+the unconsumed suffix of the input string,
+while a failed match result is represented as $\Failure$.
+
+The predicate is inductively defined in \Cref{fig:match}.
+\begin{figure}
+    \input{matches}
+    \caption{The match predicate.}
+    \label{fig:match}
+\end{figure}
+The empty pattern $\PEmpty$
+matches any string,
+without consuming anything.
+A character set pattern ${\PSet{cs}}$
+matches only strings that start with a character in the set $\Set{cs}$,
+and consumes this character.
+The nonterminal pattern ${\PNT i}$
+matches the ${i^{th}}$ rule of the grammar.
+The repetition pattern ${\PRepetition p}$
+matches $p$ as many times as possible
+in sequence.
+The not-predicate pattern ${\PNot{p}}$ matches
+iff $p$ does not match.
+(It never consumes any input,
+as either $p$ or ${\PNot{p}}$ always fail.)
+The and-predicate pattern ${\PAnd{p}}$ matches
+iff $p$ matches,
+but without consuming any input.
+A sequence pattern ${\PSequence{p_1}{p_2}}$
+matches $p_1$ followed by $p_2$.
+Lastly, the pattern ${\PChoice{p_1}{p_2}}$
+constitutes an \emph{ordered choice}:
+It first tries to match $p_1$,
+and, if that fails, tries to match $p_2$.
+
+In case the reader is not familiar with the semantics of PEGs,
+it can be helpful to go through some examples.
+Let us start with the pattern $\PSet{ab}$,
+which matches the letters ``a'' or ``b''.
+Unsurprisingly,
+this pattern matches and consumes
+the whole string ``a'',
+leaving the empty string as a result.
+It also matches the string ``baby'',
+consuming just the first letter ``b''
+and leaving the suffix ``aby'' unconsumed.
+Meanwhile, for strings that do not start
+with either the character ``a'' or ``b'',
+the pattern fails.
+For example, the pattern fails for the empty string
+and for the string ``kaaba''.
+
+If we wish the pattern to match zero or more letters ``a'' or ``b'',
+we can use the repetition operator on the previous pattern,
+resulting in the pattern $\PRepetition{\PSet{ab}}$.
+This pattern matches the string ``baby'',
+consuming the prefix ``bab''
+and leaving the letter ``y'' unconsumed.
+It also matches the empty string.
+
+Some repetitions, however, are incomplete,
+meaning they may yield no match result.
+Take, for example, the pattern $\PRepetition{\PEmpty}$,
+which matches $\PEmpty$ as many times as possible.
+The repetition body $\PEmpty$ always matches and consumes no input,
+so the match never makes any progress and gets stuck in an infinite loop.
+This happens for any repetition whose body
+may match a string while consuming no input.
+\begin{align*}
+    \forall g, \forall s, \Matches{g}{p}{s}{s} \implies
+    \nexists res, \Matches{g}{\PRepetition{p}}{s}{res}
+\end{align*}
+
+Some grammar rules can also be incomplete,
+which we will demonstrate by showing how repetitions
+can be reduced to recursive grammar rules.
+Given a repetition pattern $\PRepetition{p}$,
+we can rewrite it as the non-terminal pattern $\PNT{i}$
+in a grammar whose $i^{th}$ rule is defined as
+$\PChoice{\PSequence{p}{\PNT{i}}}{\PEmpty}$.
+If $\PRepetition{p}$ is incomplete,
+then its reduction to a recursive grammar rules is also incomplete,
+even if $p$ contains no repetitions.
+This demonstrates that some grammar rules can be
+intrinsically incomplete, even when free of repetitions.
+This happens when rules reference themselves
+(directly or indirectly) while consuming no input in-between.
+We call these left-recursive rules.
+The simplest example of such a rule is
+one whose body is a non-terminal pattern that references
+the rule itself.
+\begin{align*}
+    \forall g, \forall i, g[i] = \Some \PNT{i} \implies
+    \forall s, \nexists res, \Matches{g}{\PNT{i}}{s}{res}
+\end{align*}
+
+As briefly displayed in the reduction of repetitions
+into recursive grammar rules,
+we can chain patterns together
+with the sequence operator.
+For example,
+the pattern $\PSequence{\PRepetition{\PSet{ab}}}{\PSet{y}}$
+matches the string ``baby'' but not the string ``babies''.
+
+If we wish a pattern to be optional,
+similar to how the $\POptional{p}$ operator from the
+complete PEG syntax does,
+we can make a choice between this pattern
+and the empty pattern $\PEmpty$.
+For example,
+the pattern $\PSequence{\PRepetition{\PSet{ab}}}{(\PChoice{\PSet{y}}{\PEmpty})}$
+matches both strings ``baby'' and ``babies'',
+but leaves the suffix ``ies'' unconsumed.
+
+We can also choose to fail when a given pattern matches,
+through the not-predicate operator $\PNot{p}$.
+Let us say, for example,
+that the consumed input prefix
+must not contain the substring ``aa'.
+This behavior is implemented in the pattern
+$\PRepetition{(\PSequence{\PNot{(\PSequence{\PSet{a}}{\PSet{a}})}}{\PSet{ab}})}$.
+This pattern matches the strings ``baba'' and ``baaba'',
+but leaves the suffix ``aaba'' unconsumed.
+
+We can also check whether a pattern matches
+but not consume any input.
+That is possible with the and-predicate operator $\PAnd{p}$.
+For example,
+the pattern $\PAnd{\PSet{ab}}$
+checks whether a string
+starts with either the character ``a'' or ``b'',
+but does not consume it.
+This pattern matches the string ``baby'',
+while not consuming any characters,
+and fails to match the string ``kaaba''.
+
+One aspect of PEGs that can vary
+depending on the implementation
+is how rules are identified and referenced,
+that is, the set of nonterminals.
+The original syntax proposed by Ford
+uses strings~\cite{ford_parsing_2004}.
+Meanwhile,
+\lpeg{} allows rules to be identified 
+by arbitrary Lua values~\cite{ierusalimschy_lpeg_2024}.
+Meanwhile, our formalization uses natural indices
+to identify the rules,
+as it allows us to represent
+grammars as lists of rules in Coq.
+
+Regarding the match predicate,
+we can already state two important,
+yet simple, properties.
+First, the predicate is deterministic:
+Given a grammar, a pattern, and an input string,
+there is at most one possible match result.
+
+\begin{lemma}%[Determinism]
+    If ${\Matches{g}{p}{s}{res_1}}$
+    and ${\Matches{g}{p}{s}{res_2}}$,
+    then ${res_1 = res_2}$.
+    \label{lemma:match-determinism}
+\end{lemma}
+
+The second property states that the result string
+is a suffix of the input string.
+We use the symbol ``${\Suffix{}{}}$''
+to denote the suffix relation.
+This lemma might seem obvious,
+but we assure the reader that it will be necessary later
+to prove lemmas by induction on the length of the input string.
+
+\begin{lemma}%[Result String is Suffix of Input String]
+    If ${\Matches{g}{p}{s}{s'}}$,
+    then ${\Suffix{s'}{s}}$.
+    \label{lemma:match-suffix}
+\end{lemma}
+
+An important characteristic of this predicate,
+which has profound consequences in our formalization efforts,
+is that it not represent a total function:
+Not all combinations of
+grammars, patterns, and input strings
+relate to a match result.
+This may happen for several reasons,
+which we will go through
+in the following paragraphs.
+
+The first reason is that
+the grammar may be empty,
+meaning it does not have any rule.
+This is a problem,
+because we use the first rule of the grammar
+as the initial pattern.
+If the grammar is empty,
+then there is no first rule.
+
+The second reason is that
+the pattern may reference a non-existent rule.
+This problem is not exclusive to our formalization,
+which references rules by indices.
+Ford and \lpeg{}
+also suffer from this problem,
+because,
+in order to textually describe a recursive grammar,
+you need to use some form of reference,
+which may be invalid.
+
+The third reason for
+a pattern to not yield a match result
+is because of so-called \emph{left-recursive} rules.
+To illustrate what we mean by such,
+consider the following rule.
+\begin{equation}
+    \Rule{\PNT{i}}{\PNT{i}}
+    \label{eqn:lr-rule-simple}
+\end{equation}
+
+If we were to parse the pattern ${\PNT{i}}$,
+we would resolve it to the body of the ${i^{th}}$ rule,
+which is also the pattern ${\PNT{i}}$.
+In doing so,
+neither the pattern nor the input string would change,
+which clearly leads to an infinite loop.
+This is the simplest example of a left-recursive rule.
+
+The previous example involves only one rule.
+Left-recursive rules, however,
+can also involve
+multiple rules.
+The following grammar,
+for example,
+has three rules,
+one referencing another,
+all of which are left-recursive.
+\begin{equation*}
+    \begin{cases}
+        \Rule{\PNT{i}}{\PNT{j}} \\
+        \Rule{\PNT{j}}{\PNT{k}} \\
+        \Rule{\PNT{k}}{\PNT{i}}
+    \end{cases}
+\end{equation*}
+
+The reader might notice that,
+in both examples,
+there are rules referencing one another.
+However, this doesn't necessarily imply in left recursion.
+The following rule, for example,
+references itself, but is not left-recursive.
+
+\begin{equation}
+    \Rule{\PNT{i}}{\PChoice{\PSequence{\PSet{cs}}{\PNT{i}}}{\PEmpty}}
+    \label{eqn:a-star-rule}
+\end{equation}
+
+What makes the rule from \Cref{eqn:lr-rule-simple} left-recursive,
+but not the one from \Cref{eqn:a-star-rule},
+is a subtle, yet important difference.
+In \Cref{eqn:lr-rule-simple},
+the nonterminal pattern ${\PNT{i}}$
+is always visited
+with the same input string
+as the one provided to the rule.
+Meanwhile,
+in \Cref{eqn:a-star-rule},
+the nonterminal pattern ${\PNT{i}}$
+is always visited
+with an input string
+shorter than the one provided to the rule,
+since the character set pattern ${\PSet{cs}}$
+always consumes a character when it matches.
+Given that input strings are finite,
+we can prove that this rule yields a result
+for any input string.
+The proof is carried out by induction on the length of
+the input string,
+using \Cref{lemma:match-suffix}.
+
+The fourth and last reason
+for the lack of a match result
+are so-called degenerate loops,
+which are repetition patterns ${\PRepetition{p}}$
+whose body $p$
+may match without consuming any input.
+If $p$ matches, but does not consume any input,
+then it will do so infinitely many times.
+One example of a degenerate loop is the pattern
+${\PRepetition{(\PRepetition{\PSet{cs}})}}$.
+
+In any of these cases,
+a match result is not guaranteed to exist.
+In practice,
+we would like to ensure that
+a grammar yields a match result
+for any input string.
+This property is called \emph{completeness}.
+\begin{equation}
+    \text{$g$ is complete} \iff
+    \forall s, \exists res, \Matches{g}{\PNT{0}}{s}{res}
+\end{equation}
+
+Ford~\cite{ford_parsing_2004} showed that
+the problem of knowing whether a grammar
+is complete is undecidable.
+He then presented a conservative approximation
+to completeness known as \emph{well-formedness},
+which is decidable.
+
+We formalize this well-formedness check
+as a computable function \textit{wf}
+that takes a grammar and returns a Boolean value
+indicating whether the grammar is well-formed or not.
+We also prove its correctness by showing that,
+for any given grammar $g$,
+if $\wf{g} = true$,
+then $g$ is complete.
+
+How \lpeg{} implements this function \textit{wf}
+is the focus of the next chapter,
+as well as its proof of correctness.
+All definitions and proofs
+are publicly available on this project's GitHub repository%
+\footnote{\selfhref{https://github.com/guidanoli/peg-coq}}.

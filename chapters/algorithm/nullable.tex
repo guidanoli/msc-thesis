@@ -1,0 +1,191 @@
+\section{A simpler algorithm for detecting nullable patterns}
+\label{section:nullable}
+
+Once we have made sure a grammar is free of left-recursive rules,
+the next step is to check for degenerate loops,
+which involves checking if certain patterns are nullable.
+To this end,
+we could use the algorithm we have just described in \Cref{section:lr-rules},
+but \lpeg{} implements a simpler version,
+which takes advantage of the fact that
+the grammar contains no left-recursive rules.
+
+The difference between the algorithm from \Cref{section:lr-rules}
+and this simpler version can be seen,
+for example, in the case of choice patterns $\PChoice{p_1}{p_2}$.
+More specifically, if $p_1$ is nullable,
+the function from \Cref{section:lr-rules}
+would still need to evaluate $p_2$,
+as it could potentially lead to left recursion.
+Meanwhile, if we assume that $p_2$ cannot lead to left recursion,
+then if $p_1$ is nullable,
+we can state that $\PChoice{p_1}{p_2}$ is nullable,
+without having to visit $p_2$.
+We can also avoid visiting sub-patterns in the cases of
+repetition patterns and predicate patterns,
+because they are all nullable.
+
+In \Cref{fig:nullable-function},
+we define this simpler version as a fixed-point,
+which takes a grammar,
+a pattern, a stack depth limit, and a gas counter,
+and returns an optional label.
+Possible return values are, therefore,
+$\None$ (out-of-gas), $\Some \None$ (stack overflow),
+$\Some \Some true$ (nullable), and $\Some \Some false$ (non-nullable).
+
+The gas parameter is still necessary to convince Coq that
+the function terminates,
+and because it could be called
+with an incoherent pattern or
+with a grammar that contains an incoherent rule.
+The stack depth limit is also necessary
+because the function could be called
+with a grammar that contains a left-recursive rule.
+For these two reasons,
+this function
+may still return $\None$ (out-of-gas)
+or $\Some \None$ (stack overflow).
+
+In reality, however,
+this function should only be called after
+the grammar and pattern are guaranteed to be
+coherent and free of left-recursive rules.
+For this reason,
+implementations of this algorithm
+such as the one in \lpeg{}
+are able to safely drop both parameters,
+and return just a Boolean value
+indicating whether the pattern is nullable or not.
+
+Also note that, unlike the function from \Cref{fig:vr-function},
+this function does not receive a nullable accumulator as parameter
+and does not return a stack.
+The nullable accumulator is not necessary,
+thanks to the assumption that
+the grammar contains no left-recursive rules,
+and the output stack was only used for proofs,
+which we will be able to reuse from \Cref{section:lr-rules}.
+
+\begin{figure}
+    \centering
+    \input{nullablecomp}
+    \caption{The nullable function.}
+    \label{fig:nullable-function}
+\end{figure}
+
+Just as we did for the function from \Cref{section:lr-rules},
+we prove that this simpler version also converges
+with respect to the gas counter.
+
+\begin{lemma}%[Nullable Gas Convergence]
+    If $\nullablecomp{g}{p}{d}{gas} = \Some res$, \\
+    then, $\forall gas' \ge gas$,
+    $\nullablecomp{g}{p}{d}{gas'} = \Some res$.
+    \label{lemma:nullable-gas-convergence}
+\end{lemma}
+
+Besides that, we also give a lower bound
+for the gas counter for which the function
+returns some result
+for any coherent pattern and grammar.
+
+\begin{lemma}%[Nullable Termination]
+    If $\Coherent{g}{p}{true}$,
+    and $\lCoherent{g}{g}{true}$, \\
+    then, $\forall gas \ge \size{p} + d \cdot \size{g}$,
+    $\exists res\ \nullablecomp{g}{p}{d}{gas} = \Some res$.
+    \label{lemma:nullable-termination}
+\end{lemma}
+
+Furthermore, we would also like to prove that
+this function converges with respect to the stack depth limit.
+However, in order to do that,
+we found it better to first define an equivalent inductive predicate.
+\Cref{fig:nullable-predicate} defines the predicate
+$\Nullable{g}{p}{d}{res}$ which takes a grammar $g$,
+a pattern $p$, a stack depth limit $d$, and returns a label $res$.
+
+\begin{figure}
+    \centering
+    \input{nullable}
+    \caption{The nullable predicate.}
+    \label{fig:nullable-predicate}
+\end{figure}
+
+About this predicate, we proved some basic lemmas.
+First, we proved that it is deterministic.
+
+\begin{lemma}
+    If $\Nullable{g}{p}{d}{res_1}$,
+    and $\Nullable{g}{p}{d}{res_2}$,
+    then $res_1 = res_2$.
+\end{lemma}
+
+We also proved that it follows
+the fixed-point definition.
+
+\begin{lemma}
+    If $\nullablecomp{g}{p}{d}{gas} = \Some res$,
+    then $\Nullable{g}{p}{d}{res}$.
+\end{lemma}
+
+We also tied this predicate to the
+one from \Cref{section:lr-rules},
+showing how similar they are,
+when the nullable accumulator is $false$,
+and the pattern is either nullable or non-nullable.
+
+\begin{lemma}%[Verify Rule Similar to Nullable]
+    If $\VerifyRule{g}{p}{d}{false}{\Some b}{k}$,
+    then $\Nullable{g}{p}{d}{\Some b}$.
+\end{lemma}
+
+We also proved that if a pattern
+was identified as either nullable or non-nullable,
+then increasing the stack depth does not impact the result.
+
+\begin{lemma}%[Stack Depth Limit Increase Without Overflow]
+    If $\Nullable{g}{p}{d}{\Some b}$,
+    then $\forall d' \ge d, \Nullable{g}{p}{d'}{\Some b}$.
+\end{lemma}
+
+Maybe the most important lemma
+about the nullable predicate
+relates to the match predicate.
+It states that a non-nullable pattern
+never matches without consuming
+some part of the input string.
+
+\begin{lemma}%[Non-nullable pattern and Match]
+    If $\Nullable{g}{p}{d}{\Some false}$,
+    then $\nexists s$ such that $\Matches{g}{p}{s}{s}$.
+\end{lemma}
+
+This lemma is used to prove that,
+when matching a non-nullable pattern,
+the output string is a proper suffix of the input string.
+We use the symbol ``$\ProperSuffix{}{}$''
+to denote this relation.
+
+\begin{lemma}%[Non-nullable pattern and Proper Suffix]
+    \label{lemma:non-nullable-pattern-proper-suffix}
+    If $\Nullable{g}{p}{d}{\Some false}$,
+    and $\Matches{g}{p}{s}{s'}$,
+    then $\ProperSuffix{s'}{s}$.
+\end{lemma}
+
+Finally, we show that the predicate converges
+with respect to the stack depth limit,
+past a lower bound given by the number of rules in the grammar,
+denoted as $\length{g}$.
+
+\begin{lemma}%[Nullable Stack Depth Limit Convergence]
+    If $\Coherent{g}{p}{true}$,
+    and $\lCoherent{g}{g}{true}$,
+    and $\lVerifyRule{g}{g}{true}$, \\
+    and $\Nullable{g}{p}{d}{res}$,
+    where $d > \length{g}$,
+    then, $\forall d' \ge d$,
+    $\Nullable{g}{p}{d'}{res}$.
+\end{lemma}

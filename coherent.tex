@@ -1,0 +1,37 @@
+\begin{mathpar}
+    \namedinferrule{c-eps}
+    { }
+    {\Coherent{g}{\PEmpty}{true}}
+    
+    \namedinferrule{c-set}
+    { }
+    {\Coherent{g}{\PSet{cs}}{true}}
+    
+    \namedinferrule{c-nonterminal-some}
+    {g[i] = \Some(p)}
+    {\Coherent{g}{\PNT i}{true}}
+    
+    \namedinferrule{c-nonterminal-none}
+    {g[i] = \None}
+    {\Coherent{g}{\PNT i}{false}}
+    
+    \namedinferrule{c-rep}
+    {\Coherent{g}{p}{res}}
+    {\Coherent{g}{\PRepetition p}{res}}
+    
+    \namedinferrule{c-not}
+    {\Coherent{g}{p}{res}}
+    {\Coherent{g}{\PNot p}{res}}
+    
+    \namedinferrule{c-and}
+    {\Coherent{g}{p}{res}}
+    {\Coherent{g}{\PAnd p}{res}}
+    
+    \namedinferrule{c-seq}
+    {\Coherent{g}{p_1}{res_1} \\ \Coherent{g}{p_2}{res_2}}
+    {\Coherent{g}{\PSequence{p_1}{p_2}}{res_1 \wedge res_2}}
+    
+    \namedinferrule{c-choice}
+    {\Coherent{g}{p_1}{res_1} \\ \Coherent{g}{p_2}{res_2}}
+    {\Coherent{g}{\PChoice{p_1}{p_2}}{res_1 \wedge res_2}}
+\end{mathpar}

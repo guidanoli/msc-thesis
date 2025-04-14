@@ -1,0 +1,9 @@
+\begin{mathpar}
+    \namedinferrule{lc-nil}
+    { }
+    {\lCoherent{g}{nil}{true}}
+
+    \namedinferrule{lc-cons}
+    {\Coherent{g}{r}{b_1} \\ \lCoherent{g}{rs}{b_2}}
+    {\lCoherent{g}{r::rs}{b_1 \wedge b_2}}
+\end{mathpar}
