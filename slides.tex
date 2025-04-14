@@ -87,21 +87,8 @@
         \item Introduced by \cite{ford_parsing_2004}
         \item Based on top-down language parsers
         \item Deterministic, unlike context-free grammars
-        \item Recognize some non-context-free languages
     \end{itemize}
 \end{frame}
-
-% \begin{frame}{Parsing Expressions (abstract syntax)}
-%     \begin{itemize}
-%         \item empty string $\PEmpty$
-%         \item terminals (e.g. $a$)
-%         \item non-terminals (e.g. $A$)
-%         \item zero-or-more repetitions $\PRepetition{e}$
-%         \item not-predicates $\PNot{e}$
-%         \item sequences $\PSequence{e_1}{e_2}$
-%         \item prioritized choices $\PChoice{e_1}{e_2}$
-%     \end{itemize}
-% \end{frame}
 
 \begin{frame}{Parsing Expressions}
     \begin{itemize}
@@ -121,34 +108,29 @@
 
 \newcommand{\FordMatch}[4]{#1 \vdash (#2, #3) \rightsquigarrow #4}
 
-\begin{frame}{PEG Semantics: Match}
+\begin{frame}{Example}
     \begin{align*}
-        \FordMatch{G}{e_S}{s}{res}
-    \end{align*}
-\end{frame}
-
-\begin{frame}{Match Results}
-    \begin{itemize}
-        \item On success: the unconsumed input suffix
-        \begin{align*}
-            \FordMatch{G}{e_S}{s}{s'}
-        \end{align*}
-        \item On failure: nothing
-        \begin{align*}
-            \FordMatch{G}{e_S}{s}{\bot}
-        \end{align*}
-    \end{itemize}
-\end{frame}
-
-\begin{frame}{Example of PEG}
-    \begin{itemize}
-        \item Let $G$ be a grammar with the following rules:
-        \begin{align*}
+        G = \begin{cases}
             \Rule{A&}{\PChoice{\PSequence{a}{\PSequence{A}{b}}}{\PEmpty}} \\
             \Rule{B&}{\PChoice{\PSequence{b}{\PSequence{B}{c}}}{\PEmpty}} \\
             \Rule{D&}{\PSequence{\PAnd{(\PSequence{A}{\PNot{b}})}}{\PSequence{\PRepetition{a}}{\PSequence{B}{\PNot{\PDot{}}}}}}
+        \end{cases}
+    \end{align*}
+    \begin{itemize}
+        \item $G \vdash D$ recognizes $a^n b^n c^n$
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Semantics}
+    \begin{itemize}
+        \item Successful match
+        \begin{align*}
+            \FordMatch{G}{e_S}{s}{s'}
         \end{align*}
-        \item Then $G \vdash D$ recognizes the non-context-free language $a^n b^n c^n$
+        \item Failed match
+        \begin{align*}
+            \FordMatch{G}{e_S}{s}{\bot}
+        \end{align*}
     \end{itemize}
 \end{frame}
 
@@ -166,10 +148,6 @@
 \begin{frame}{Well-Formedness}
     \begin{align*}
         & \text{$G \vdash e_S$ is well-formed} \\
-        % & \iff \\
-        % & \text{$G \vdash e_S$ has no invalid non-terminal $\wedge$} \\
-        % & \text{$G \vdash e_S$ has no left-recursive rule $\wedge$} \\
-        % & \text{$G \vdash e_S$ has no degenerate loop} \\
         & \implies \\
         & \text{$G \vdash e_S$ is complete}
     \end{align*}
@@ -179,51 +157,7 @@
     \end{itemize}
 \end{frame}
 
-% \begin{frame}{Invalid non-terminals}
-%     \begin{align*}
-%         \{ \} \vdash \underline{S}
-%     \end{align*}
-%     \begin{align*}
-%         \{ \Rule{S}{\underline{A}} \} \vdash S
-%     \end{align*}
-% \end{frame}
-
-\begin{frame}{Left-Recursive Rules}
-    \begin{itemize}
-        \item Direct
-        \begin{align*}
-            \Rule{A}{\PChoice{\PSequence{A}{a}}{a}}
-        \end{align*}
-        \item Mutual
-        \begin{align*}
-            \begin{cases}
-               \Rule{A}{\PChoice{\PSequence{B}{a}}{a}} \\
-               \Rule{B}{\PChoice{\PSequence{A}{b}}{b}}
-            \end{cases}
-        \end{align*}
-    \end{itemize}
-\end{frame}
-
-\begin{frame}{Degenerate Loops}
-    \begin{align*}
-        & \FordMatch{G}{e}{s}{s} \\
-        & \implies \\
-        & \nexists res,\ \FordMatch{G}{\PRepetition{e}}{s}{res} \\
-        & \implies \\
-        & \text{$G \vdash \PRepetition{e}$ is incomplete}
-    \end{align*}
-    \begin{itemize}
-        \item Examples:
-        \begin{itemize}
-            \item $\PRepetition{\PEmpty}$
-            \item $\PRepetition{(\POptional{e})}$
-            \item $\PRepetition{(\PNot{e})}$
-            \item $\PRepetition{(\PAnd{e})}$
-        \end{itemize}
-    \end{itemize}
-\end{frame}
-
-\begin{frame}{\citeauthor{ford_parsing_2004}'s Well-Formedness Check}
+\begin{frame}{Well-Formed Grammar Example}
     \begin{center}
         \begin{tikzpicture}%
             [level distance=8mm, every node/.style={rectangle,draw}]
@@ -344,11 +278,51 @@
         \item Ensures that patterns are complete
         \item Implemented in~C using simple data structures
         \item Different from the original algorithm by \citeauthor{ford_parsing_2004}
+        \begin{itemize}
+            \item Checks for left-recursive rules
+            \item Then, checks for degenerate loops
+            \item Not based on fixed-point interation
+            \item Does not require complex data structures
+        \end{itemize}
     \end{itemize}
 \end{frame}
 
+\begin{frame}{Left-Recursive Rules}
+    \begin{itemize}
+        \item Direct
+        \begin{align*}
+            \Rule{A}{\PChoice{\PSequence{A}{a}}{a}}
+        \end{align*}
+        \item Mutual
+        \begin{align*}
+            \begin{cases}
+               \Rule{A}{\PChoice{\PSequence{B}{a}}{a}} \\
+               \Rule{B}{\PChoice{\PSequence{A}{b}}{b}}
+            \end{cases}
+        \end{align*}
+    \end{itemize}
+\end{frame}
 
-\begin{frame}{\lpeg{}'s Well-Formedness Check}
+\begin{frame}{Degenerate Loops}
+    \begin{align*}
+        & \FordMatch{G}{e}{s}{s} \\
+        & \implies \\
+        & \nexists res,\ \FordMatch{G}{\PRepetition{e}}{s}{res} \\
+        & \implies \\
+        & \text{$G \vdash \PRepetition{e}$ is incomplete}
+    \end{align*}
+    \begin{itemize}
+        \item Examples:
+        \begin{itemize}
+            \item $\PRepetition{\PEmpty}$
+            \item $\PRepetition{(\POptional{e})}$
+            \item $\PRepetition{(\PNot{e})}$
+            \item $\PRepetition{(\PAnd{e})}$
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Example: Left Recursion Check}
     \begin{center}
         \begin{tikzpicture}%
             [level distance=8mm, every node/.style={rectangle,draw}]
@@ -378,9 +352,9 @@
                     }
                     child { node[wf=<7>] {$\PEmpty$} }
                 } ;
-            \node[right=30mm of B] {D}
+            \node[right=30mm of B, wf=<21>] {D}
                 child [sibling distance=20mm] {
-                    node {;}
+                    node[wf=<20>] {;}
                     child {
                         node[wf=<12>] {$\&$}
                         child [sibling distance=10mm] {
@@ -393,7 +367,7 @@
                         }
                     }
                     child {
-                        node {;}
+                        node[wf=<19>] {;}
                         child [sibling distance=10mm] {
                             node[wf=<14>] {$*$}
                             child { node[wf=<13>] {a} }
@@ -431,6 +405,105 @@
                 \only<16>{\item Dot is non-nullable.}
                 \only<17>{\item Not-predicate $\PNot{\PDot}$ is nullable.}
                 \only<18>{\item Sequence $B\PNot{\PDot}$ is nullable.}
+                \only<19>{\item Sequence $\PSequence{\PRepetition{a}}{B\PNot{\PDot}}$ is nullable.}
+                \only<20>{\item Sequence $\PAnd{(A\PNot{b})}\PSequence{\PRepetition{a}}{B\PNot{\PDot}}$ is nullable.}
+                \only<21>{\item Rule $D$ is nullable.}
+                \only<22>{\item No left-recursive rules!}
+            \end{itemize}
+        \end{overlayarea}
+    \end{center}
+\end{frame}
+
+\begin{frame}{Example: Degenerate Loop Check}
+    \begin{center}
+        \begin{tikzpicture}%
+            [level distance=8mm, every node/.style={rectangle,draw}]
+            \node[wf=<9>] (A) {A}
+                child {
+                    node[wf=<8>] {/}
+                    child {
+                        node[wf=<6>] {;}
+                            child { node[wf=<2>] {a} }
+                            child { node[wf=<5>] {;}
+                                child { node[wf=<3>] {A} }
+                                child { node[wf=<4>] {b} }
+                            }
+                    }
+                    child { node[wf=<7>] {$\PEmpty$} }
+                } ;
+            \node[right=30mm of A, wf=<10>] (B) {B}
+                child {
+                    node[wf=<10>] {/}
+                    child {
+                        node[wf=<10>] {;}
+                            child { node[wf=<10>] {b} }
+                            child { node[wf=<10>] {;}
+                                child { node[wf=<10>] {B} }
+                                child { node[wf=<10>] {c} }
+                            }
+                    }
+                    child { node[wf=<10>] {$\PEmpty$} }
+                } ;
+            \node[right=30mm of B, wf=<24>] {D}
+                child [sibling distance=20mm] {
+                    node[wf=<23>] {;}
+                    child {
+                        node[wf=<15>] {$\&$}
+                        child [sibling distance=10mm] {
+                            node[wf=<14>] {;}
+                            child { node[wf=<11>] {A} }
+                            child {
+                                node[wf=<13>] {!}
+                                child { node[wf=<12>] {b} }
+                            }
+                        }
+                    }
+                    child {
+                        node[wf=<22>] {;}
+                        child [sibling distance=10mm] {
+                            node[wf=<17>] {$*$}
+                            child { node[wf=<16>] {a} }
+                        }
+                        child [sibling distance=20mm] {
+                            node[wf=<21>] {;}
+                            child [sibling distance=10mm] { node[wf=<18>] {B} }
+                            child [sibling distance=10mm] {
+                                node[wf=<20>] {!}
+                                child { node[wf=<19>] {.} }
+                            }
+                        }
+                    }
+                } ;
+        \end{tikzpicture}
+        
+        \vspace{10pt}
+        \begin{overlayarea}{\textwidth}{40pt}
+            \begin{itemize}
+                \only<1>{\item Now, let us look for degenerate loops.}
+                \only<2>{\item Terminal $a$ is OK.}
+                \only<3>{\item Non-terminal $A$ is assumed to be OK.}
+                \only<4>{\item Terminal $b$ is OK.}
+                \only<5>{\item Sequence $Ab$ is OK.}
+                \only<6>{\item Sequence $aAb$ is OK.}
+                \only<7>{\item Empty $\PEmpty$ is OK.}
+                \only<8>{\item Choice $aAb/\PEmpty$ is OK.}
+                \only<9>{\item Rule $A$ is OK.}
+                \only<10>{\item Rule $B$ is also OK, by symmetry.}
+                \only<11>{\item Non-terminal $A$ is assumed to be OK.}
+                \only<12>{\item Terminal $b$ is OK.}
+                \only<13>{\item Not-predicate $\PNot{b}$ is OK.}
+                \only<14>{\item Sequence $A\PNot{b}$ is OK.}
+                \only<15>{\item And-predicate $\PAnd{(A\PNot{b})}$ is OK.}
+                \only<16>{\item Terminal $a$ is OK.}
+                \only<17>{\item Terminal $a$ is non-nullable, so repetition $\PRepetition{a}$ is OK.}
+                \only<18>{\item Non-terminal $B$ is assumed to be OK.}
+                \only<19>{\item Dot is OK.}
+                \only<20>{\item Not-predicate $\PNot{\PDot}$ is OK.}
+                \only<21>{\item Sequence $B\PNot{\PDot}$ is OK.}
+                \only<22>{\item Sequence $\PSequence{\PRepetition{a}}{B\PNot{\PDot}}$ is OK.}
+                \only<23>{\item Sequence $\PAnd{(A\PNot{b})}\PSequence{\PRepetition{a}}{B\PNot{\PDot}}$ is OK.}
+                \only<24>{\item Rule $D$ is OK.}
+                \only<25>{\item No denegerate loops!}
             \end{itemize}
         \end{overlayarea}
     \end{center}
