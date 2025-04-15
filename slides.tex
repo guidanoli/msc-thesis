@@ -127,20 +127,20 @@
     \begin{itemize}
         \item Successful match
         \begin{align*}
-            \FordMatch{G}{e_S}{s}{s'}
+            \FordMatch{G}{e}{s}{s'}
         \end{align*}
         \item Failed match
         \begin{align*}
-            \FordMatch{G}{e_S}{s}{\bot}
+            \FordMatch{G}{e}{s}{\bot}
         \end{align*}
     \end{itemize}
 \end{frame}
 
 \begin{frame}{Completeness}
     \begin{align*}
-        & \text{$G \vdash e_S$ is complete} \\
+        & \text{$G \vdash e$ is complete} \\
         & \iff \\
-        & \forall s,\ \exists res,\ \FordMatch{G}{e_S}{s}{res}
+        & \forall s,\ \exists res,\ \FordMatch{G}{e}{s}{res}
     \end{align*}
     \begin{itemize}
         \item Proven to be \emph{undecidable} by \citeauthor{ford_parsing_2004}
@@ -149,9 +149,9 @@
 
 \begin{frame}{Well-Formedness}
     \begin{align*}
-        & \text{$G \vdash e_S$ is well-formed} \\
+        & \text{$G \vdash e$ is well-formed} \\
         & \implies \\
-        & \text{$G \vdash e_S$ is complete}
+        & \text{$G \vdash e$ is complete}
     \end{align*}
     \begin{itemize}
         \item Fixed-point-based algorithm proposed by \cite{ford_parsing_2004}
@@ -666,7 +666,7 @@
     \end{align*}
     \begin{itemize}
         \item ``Which first characters make a pattern fail?''
-        \item Concept originally from $LL(k)$ parsers
+        \item Concept originally from $LL(1)$ parsers
     \end{itemize}
 \end{frame}
 
@@ -674,10 +674,11 @@
     \begin{align*}
         & \text{$G \vdash e$ is not empty} \\
         & \implies \\
-        & \FordMatch{G}{e}{\EmptyString}{\bot}
+        & \FordMatch{G}{e}{\varepsilon}{\bot}
     \end{align*}
     \begin{itemize}
         \item ``Does the pattern fail the empty string?''
+        \item Sometimes denoted as $\varepsilon \in first(e)$ in $LL(1)$
     \end{itemize}
 \end{frame}
 
