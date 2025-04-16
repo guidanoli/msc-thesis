@@ -571,8 +571,8 @@
             [level distance=8mm, every node/.style={rectangle,draw}]
             \node[visit={<2,5,8>}, ill=<9>] (A) {A}
                 child {
-                    node[visit={<3,6>}, ill=<11>] {;}
-                    child { node[visit={<4,7>}, ill=<10>] {A} }
+                    node[visit={<3,6>}] {;}
+                    child { node[visit={<4,7>}] {A} }
                     child { node {a} }
                 } ;
         \end{tikzpicture}
@@ -589,9 +589,8 @@
                 \only<7>{\item Visiting non-terminal $A$... \item \# Non-terminals visited: 1}
                 \only<8>{\item Visiting rule $A$... \item \# Non-terminals visited: 2}
                 \only<9>{\item Visited more rules than the number of grammar rules. \item Rule $A$ is left-recursive!}
-                \only<10>{\item Non-terminal $A$ leads to left recursion.}
-                \only<11>{\item Sequence $Aa$ leads to left recursion.}
-                \only<12>{\item Grammar contains a left-recursive rule.}
+                \only<10>{\item This algorithm is not very efficient in identifying left-recursive rules.
+                \item However, performance in error cases is not crucial.}
             \end{itemize}
         \end{overlayarea}
     \end{center}
