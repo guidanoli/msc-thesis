@@ -669,7 +669,7 @@
 
 \begin{frame}{First-Set}
     \begin{align*}
-        & \text{$a \notin$ first-set of $G \vdash e$} \\
+        & \text{$a \notin first(e)$} \\
         & \implies \\
         & \forall s,\ \FordMatch{G}{e}{a::s}{\bot}
     \end{align*}
@@ -691,122 +691,37 @@
     \end{itemize}
 \end{frame}
 
-\begin{frame}{First-Set and Emptiness in \lpeg{}}
+\begin{frame}{Properties of \lpeg{}'s First-Set Computation}
     \begin{itemize}
-        \item Both values are computed by the same function
+        \item Termination
+        \begin{align*}
+            & gas \ge mingas(G, e) \\
+            & \wedge (wf(G, e, gas) = \Some true) \\
+            & \implies \\
+            & \exists b,\ \exists first,\ \firstcomp{G}{e}{follow}{gas} = \Some (b, first)
+        \end{align*}
+        \item Correctness
+        \begin{align*}
+            & \firstcomp{G}{e}{\Sigma}{gas} = \Some (false, first) \\
+            & \wedge ((s = \varepsilon) \vee (\text{$s$ starts with $a \notin first$})) \\
+            & \implies \\
+            & \FordMatch{G}{e}{s}{\bot}
+        \end{align*}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Application of First-Set and Emptiness in \lpeg{}}
+    \begin{itemize}
         \item \lpeg{} uses them to optimize certain patterns
+        \begin{align*}
+            & (\text{$G \vdash (e_1/e_2)$ is WF}) \\
+            & \wedge (first(e_1) \cap first(e_2) = \EmptySet{}) \\
+            & \wedge (\neg empty(e_1)) \\
+            & \implies \\
+            & \PChoice{e_1}{e_2} \equiv \PAnd{\PSet{first(e_1)}}e_1/\PNot{\PSet{first(e_1)}}e_2
+        \end{align*}
     \end{itemize}
 \end{frame}
-
-\begin{frame}{Properties of First-Set Computation}
-    \begin{itemize}
-        \item It terminates for any well-formed grammar and expression
-        \item It correctly identifies first characters that make a pattern fail
-        \item It correctly identifies patterns that fail the empty string
-    \end{itemize}
-\end{frame}
-
-% \newcommand{\SlidesFirstA}[2]{\firstname{}(#1,#2)}
-%
-% \begin{frame}{First-Set Property}
-%     \begin{align*}
-%         & c \notin \SlidesFirstA{G}{p} \\
-%         & \implies \\
-%         & \forall s,\ \FordMatch{G}{p}{c::s}{\bot}
-%     \end{align*}
-% \end{frame}
-%
-% \begin{frame}{First-Set of some Patterns}
-%     \begin{itemize}
-%         \item $\SlidesFirstA{G}{\PEmpty} = \Sigma$
-%         \item $\SlidesFirstA{G}{\PRepetition{p}} = \Sigma$
-%         \item $\SlidesFirstA{G}{\PSet{cs}} = \Set{cs}$
-%     \end{itemize}
-% \end{frame}
-%
-% \begin{frame}{First-Set of Sequences}
-%     \begin{align*}
-%         \SlidesFirstA{G}{\PSequence{p_1}{p_2}} &=
-%         \begin{cases}
-%             \SlidesFirstA{G}{p_1} & \text{if $p_1$ is non-nullable} \\
-%             \dots? & \text{if $p_1$ is nullable}
-%         \end{cases}
-%     \end{align*}
-% \end{frame}
-%
-% \begin{frame}{First-Set of Sequences of Nullable Patterns}
-%     \begin{itemize}
-%         \item $\SlidesFirstA{G}{\PSequence{\PEmpty}{\PSet{cs_2}}} = \Set{cs_2}$
-%         \item $\SlidesFirstA{G}{\PSequence{\PRepetition{\PSet{cs_1}}}{\PSet{cs_2}}} = \SetUnion{\Set{cs_1}}{\Set{cs_2}}$
-%     \end{itemize}
-% \end{frame}
-%
-% \newcommand{\SlidesFirstB}[3]{\firstname{}(#1, #2, #3)}
-%
-% \begin{frame}{Follow-Set Parameter}
-%     \begin{itemize}
-%         \item $\SlidesFirstB{G}{\PEmpty}{follow} = follow$
-%         \item $\SlidesFirstB{G}{\PRepetition{p}}{follow} = \SlidesFirstB{G}{p}{follow} \cup follow$
-%         \item $\SlidesFirstB{G}{\PNot{p}}{follow} = follow$
-%         \item $\SlidesFirstB{G}{\PAnd{p}}{follow} = \SlidesFirstB{G}{p}{\Sigma} \cap follow$
-%     \end{itemize}
-% \end{frame}
-%
-% \begin{frame}{Follow-Set Independence of Non-Nullable Patterns}
-%     \begin{align*}
-%         & \text{$G \vdash p$ is non-nullable} \\
-%         & \implies \\
-%         & \forall follow_1,\ \forall follow_2, \\
-%         & \SlidesFirstB{G}{p}{follow_1} = \SlidesFirstB{G}{p}{follow_2}
-%     \end{align*}
-% \end{frame}
-%
-% %         \begin{align*}
-% %             c \notin First(G, e) \implies \forall s, \FordMatch{G}{e}{c::s}{\bot}
-% %         \end{align*}
-%
-% \begin{frame}{First-Set Function Signature}
-%     \begin{itemize}
-%         \item Takes a grammar $G$, a pattern $p$, a follow-set $follow$
-%         \item Returns the first-set and the emptiness value of $G \vdash p$
-%         \item Concept imported from $LL(1)$ parsers, and adapted to PEGs
-%         \item Set of first characters that can be accepted by a pattern
-%     \end{itemize}
-% \end{frame}
-%
-% \begin{frame}{Properties of \lpeg{}'s First-Set Computation}
-%     \begin{itemize}
-%         \item Terminates for any well-formed PEG
-%         \item Indicates first characters that make a pattern fail:
-%         \begin{align*}
-%             c \notin first(G, e) \implies \forall s, \FordMatch{G}{e}{c::s}{\bot}
-%         \end{align*}
-%         \item Also checks whether a pattern fails the empty string:
-%         \begin{align*}
-%             \neg empty(G, e) \implies \FordMatch{G}{e}{\EmptyString}{\bot}
-%         \end{align*}
-%     \end{itemize}
-% \end{frame}
-%
-% % \newcommand{\ifthenelsepat}[3]{\PChoice{\PSequence{\PAnd{#1}}{#2}}{\PSequence{\PNot{#1}}{#3}}}
-%
-% \begin{frame}{Follow-Set}
-%     \begin{itemize}
-%         \item
-%     \end{itemize}
-% \end{frame}
-%
-% \begin{frame}{Application of First-Set in \lpeg{}}
-%     \begin{itemize}
-%         \item Assume $G \vdash \PChoice{e_1}{e_2}$ is well-formed.
-% % and $s'$ either is empty or starts with $x \in follow$, \\
-% % and $\firstcomp{g}{p_1}{\Sigma}{gas_1} = \Some (false, first_1)$, \\
-% % and $\firstcomp{g}{p_2}{follow}{gas_2} = \Some (b, first_2)$, \\
-% % and $\SetIntersection{first_1}{first_2} = \EmptySet{}$, \\
-% % and $\Matches{g}{\PChoice{p_1}{p_2}}{s}{s'}$, \\
-% % then $\Matches{g}{\ifthenelsepat{\PSet{first_1}}{p_1}{p_2}}{s}{s'}$.
-%     \end{itemize}
-% \end{frame}
 
 \begin{frame}{Related Work}
     \begin{itemize}
@@ -814,6 +729,7 @@
         \item \cite{koprowski_trx_2011} and \emph{well-formed} XPEGs in Coq
         \item \cite{ribeiro_towards_2019} and \emph{well-typed} PEGs in Agda
         \item \cite{blaudeau_verified_2020} and their verified PEG parser in PVS
+        \item We are unaware of any previous work on first-set of PEGs
     \end{itemize}
 \end{frame}
 
@@ -829,8 +745,7 @@
     \end{itemize}
 \end{frame}
 
-% Hide bibliography
-\begin{frame}<beamer:0>
+\begin{frame}[fragile,allowframebreaks]{Bibliography}
     \bibliographystyle{apalike}
     \bibliography{references}
 \end{frame}
