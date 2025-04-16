@@ -653,7 +653,17 @@
 \begin{frame}{Properties of \lpeg{}'s Well-Formedness Check}
     \begin{itemize}
         \item Termination
+        \begin{align*}
+            & gas \ge mingas(G, e) \\
+            & \implies \\
+            & \exists b,\ wf(G, e, gas) = \Some b
+        \end{align*}
         \item Correctness
+        \begin{align*}
+            & wf(G, e, gas) = \Some true \\
+            & \implies \\
+            & \text{$G \vdash e$ is complete}
+        \end{align*}
     \end{itemize}
 \end{frame}
 
