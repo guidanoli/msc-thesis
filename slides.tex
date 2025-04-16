@@ -161,145 +161,143 @@
     \end{itemize}
 \end{frame}
 
-\begin{frame}{Well-Formed Grammar Example}
-    \begin{center}
-        \begin{tikzpicture}%
-            [level distance=8mm, every node/.style={rectangle,draw}]
-            \node[wf=<7>] (A) {A}
-                child {
-                    node[wf=<6>] {/}
-                    child {
-                        node[wf=<5>] {;}
-                            child { node[wf=<2>] {a} }
-                            child { node[wf=<9>] {;}
-                                child { node[wf=<8>] {A} }
-                                child { node[wf=<2>] {b} }
-                            }
-                    }
-                    child { node[wf=<2>] {$\PEmpty$} }
-                } ;
-            \node[right=30mm of A, wf=<7>] (B) {B}
-                child {
-                    node[wf=<6>] {/}
-                    child {
-                        node[wf=<5>] {;}
-                            child { node[wf=<2>] {b} }
-                            child { node[wf=<9>] {;}
-                                child { node[wf=<8>] {B} }
-                                child { node[wf=<2>] {c} }
-                            }
-                    }
-                    child { node[wf=<2>] {$\PEmpty$} }
-                } ;
-            \node[right=30mm of B, wf=<12>] {D}
-                child [sibling distance=20mm] {
-                    node[wf=<11>] {;}
-                    child {
-                        node[wf=<10>] {$\&$}
-                        child [sibling distance=10mm] {
-                            node[wf=<9>] {;}
-                            child { node[wf=<8>] {A} }
-                            child {
-                                node[wf=<4>] {!}
-                                child { node[wf=<2>] {b} }
-                            }
-                        }
-                    }
-                    child {
-                        node[wf=<10>] {;}
-                        child [sibling distance=10mm] {
-                            node[wf=<3>] {$*$}
-                            child { node[wf=<2>] {a} }
-                        }
-                        child [sibling distance=20mm] {
-                            node[wf=<9>] {;}
-                            child [sibling distance=10mm] { node[wf=<8>] {B} }
-                            child [sibling distance=10mm] {
-                                node[wf=<4>] {!}
-                                child { node[wf=<2>] {.} }
-                            }
-                        }
-                    }
-                } ;
-        \end{tikzpicture}
-
-        \vspace{10pt}
-        \begin{overlayarea}{\textwidth}{40pt}
-            \begin{itemize}
-                \only<1>{\item This is the PEG for the language $a^n b^n c^n$ in tree format.}
-                \only<2>{\item Empty $\PEmpty$, terminals $a, b, c$, and dot are WF.}
-                \only<3>{\item Terminal $a$ is non-nullable, so $\PRepetition{a}$ is WF.}
-                \only<4>{\item Not-predicates $\PNot{b}$ and $\PNot{\PDot{}}$ are WF.}
-                \only<5>{\item Terminal $a$ is non-nullable, so the sequence $aAb$ is WF.
-                \item The same goes for terminal $b$ and sequence $bBc$.}
-                \only<6>{\item Choices $aAb/\PEmpty$ and $bBc/\PEmpty$ are WF.}
-                \only<7>{\item Rules $A$ and $B$ are WF.}
-                \only<8>{\item Non-terminals $A$ and $B$ are WF.}
-                \only<9>{\item Sequences $Ab$, $Bc$, $A\PNot{b}$, and $B\PNot{\PDot}$ are WF.}
-                \only<10>{\item And-predicate $\PAnd{(A\PNot{b})}$ is WF.
-                \item Sequence $\PSequence{\PRepetition{a}}{B\PNot{\PDot}}$ is WF.}
-                \only<11>{\item Sequence $\PAnd{(A\PNot{b})}\PSequence{\PRepetition{a}}{B\PNot{\PDot}}$ is WF.}
-                \only<12>{\item Rule $D$ is WF.}
-                \only<13>{\item Fixed point reached.
-                \item All subexpressions are WF, so the grammar is WF.}
-            \end{itemize}
-        \end{overlayarea}
-    \end{center}
-\end{frame}
-
-\begin{frame}{Not Well-Formed Grammar Example \#1}
-    \begin{center}
-        \begin{tikzpicture}%
-            [level distance=8mm, every node/.style={rectangle,draw}]
-            \node (A) {A}
-                child {
-                    node {;}
-                    child { node {A} }
-                    child { node[wf=<2>] {a} }
-                } ;
-        \end{tikzpicture}
-
-        \vspace{10pt}
-        \begin{overlayarea}{\textwidth}{50pt}
-            \begin{itemize}
-                \only<1>{\item This is a PEG with a single left-recursive rule $A$:
-                    \begin{align*}
-                        \Rule{A}{Aa}
-                    \end{align*}}
-                \only<2>{\item Terminal $a$ is WF.}
-                \only<3>{\item Fixed point reached.
-                \item Not all subexpressions are WF, so the grammar is \emph{not} WF.}
-            \end{itemize}
-        \end{overlayarea}
-    \end{center}
-\end{frame}
-
-\begin{frame}{Not Well-Formed Grammar Example \#2}
-    \begin{center}
-        \begin{tikzpicture}%
-            [level distance=8mm, every node/.style={rectangle,draw}]
-            \node (A) {A}
-                child {
-                    node {$*$}
-                    child { node[wf=<2>] {$\PEmpty$} }
-                } ;
-        \end{tikzpicture}
-
-        \vspace{10pt}
-        \begin{overlayarea}{\textwidth}{50pt}
-            \begin{itemize}
-                \only<1>{\item This is a PEG with a degenerate loop:
-                    \begin{align*}
-                        \Rule{A}{\PRepetition{\PEmpty}}
-                    \end{align*}}
-                \only<2>{\item Empty $\PEmpty$ is WF.}
-                \only<3>{\item Empty $\PEmpty$ is nullable, so $\PRepetition{\PEmpty}$ is \emph{not} WF.}
-                \only<4>{\item Fixed point reached.
-                \item Not all subexpressions are WF, so the grammar is \emph{not} WF.}
-            \end{itemize}
-        \end{overlayarea}
-    \end{center}
-\end{frame}
+% \begin{frame}{Well-Formed Grammar Example}
+%     \begin{center}
+%         \begin{tikzpicture}%
+%             [level distance=8mm, every node/.style={rectangle,draw}]
+%             \node[wf=<5>] (A) {A}
+%                 child {
+%                     node[wf=<4>] {/}
+%                     child {
+%                         node[wf=<3>] {;}
+%                             child { node[wf=<2>] {a} }
+%                             child { node[wf=<7>] {;}
+%                                 child { node[wf=<6>] {A} }
+%                                 child { node[wf=<2>] {b} }
+%                             }
+%                     }
+%                     child { node[wf=<2>] {$\PEmpty$} }
+%                 } ;
+%             \node[right=30mm of A, wf=<5>] (B) {B}
+%                 child {
+%                     node[wf=<4>] {/}
+%                     child {
+%                         node[wf=<3>] {;}
+%                             child { node[wf=<2>] {b} }
+%                             child { node[wf=<7>] {;}
+%                                 child { node[wf=<6>] {B} }
+%                                 child { node[wf=<2>] {c} }
+%                             }
+%                     }
+%                     child { node[wf=<2>] {$\PEmpty$} }
+%                 } ;
+%             \node[right=30mm of B, wf=<10>] {D}
+%                 child [sibling distance=20mm] {
+%                     node[wf=<9>] {;}
+%                     child {
+%                         node[wf=<8>] {$\&$}
+%                         child [sibling distance=10mm] {
+%                             node[wf=<7>] {;}
+%                             child { node[wf=<6>] {A} }
+%                             child {
+%                                 node[wf=<3>] {!}
+%                                 child { node[wf=<2>] {b} }
+%                             }
+%                         }
+%                     }
+%                     child {
+%                         node[wf=<8>] {;}
+%                         child [sibling distance=10mm] {
+%                             node[wf=<3>] {$*$}
+%                             child { node[wf=<2>] {a} }
+%                         }
+%                         child [sibling distance=20mm] {
+%                             node[wf=<7>] {;}
+%                             child [sibling distance=10mm] { node[wf=<6>] {B} }
+%                             child [sibling distance=10mm] {
+%                                 node[wf=<3>] {!}
+%                                 child { node[wf=<2>] {.} }
+%                             }
+%                         }
+%                     }
+%                 } ;
+%         \end{tikzpicture}
+%
+%         \vspace{10pt}
+%         \begin{overlayarea}{\textwidth}{40pt}
+%             \begin{itemize}
+%                 \only<1>{\item This is the PEG for the language $a^n b^n c^n$ in tree format.}
+%                 \only<2>{\item Empty $\PEmpty$, terminals $a, b, c$, and dot are WF.}
+%                 \only<3>{\item Terminals $a$ and $b$ are non-nullable, so $\PRepetition{a}$, $aAb$ and $bBc$ are WF.
+%                 \item Not-predicates $\PNot{b}$ and $\PNot{\PDot{}}$ are WF.}
+%                 \only<4>{\item Choices $aAb/\PEmpty$ and $bBc/\PEmpty$ are WF.}
+%                 \only<5>{\item Rules $A$ and $B$ are WF.}
+%                 \only<6>{\item Non-terminals $A$ and $B$ are WF.}
+%                 \only<7>{\item Sequences $Ab$, $Bc$, $A\PNot{b}$, and $B\PNot{\PDot}$ are WF.}
+%                 \only<8>{\item And-predicate $\PAnd{(A\PNot{b})}$ is WF.
+%                 \item Sequence $\PSequence{\PRepetition{a}}{B\PNot{\PDot}}$ is WF.}
+%                 \only<9>{\item Sequence $\PAnd{(A\PNot{b})}\PSequence{\PRepetition{a}}{B\PNot{\PDot}}$ is WF.}
+%                 \only<10>{\item Rule $D$ is WF.}
+%                 \only<11>{\item Fixed point reached.
+%                 \item All subexpressions are WF, so the grammar is WF.}
+%             \end{itemize}
+%         \end{overlayarea}
+%     \end{center}
+% \end{frame}
+%
+% \begin{frame}{Not Well-Formed Grammar Example \#1}
+%     \begin{center}
+%         \begin{tikzpicture}%
+%             [level distance=8mm, every node/.style={rectangle,draw}]
+%             \node (A) {A}
+%                 child {
+%                     node {;}
+%                     child { node {A} }
+%                     child { node[wf=<2>] {a} }
+%                 } ;
+%         \end{tikzpicture}
+%
+%         \vspace{10pt}
+%         \begin{overlayarea}{\textwidth}{50pt}
+%             \begin{itemize}
+%                 \only<1>{\item This is a PEG with a single left-recursive rule $A$:
+%                     \begin{align*}
+%                         \Rule{A}{Aa}
+%                     \end{align*}}
+%                 \only<2>{\item Terminal $a$ is WF.}
+%                 \only<3>{\item Fixed point reached.
+%                 \item Not all subexpressions are WF, so the grammar is \emph{not} WF.}
+%             \end{itemize}
+%         \end{overlayarea}
+%     \end{center}
+% \end{frame}
+%
+% \begin{frame}{Not Well-Formed Grammar Example \#2}
+%     \begin{center}
+%         \begin{tikzpicture}%
+%             [level distance=8mm, every node/.style={rectangle,draw}]
+%             \node (A) {A}
+%                 child {
+%                     node {$*$}
+%                     child { node[wf=<2>] {$\PEmpty$} }
+%                 } ;
+%         \end{tikzpicture}
+%
+%         \vspace{10pt}
+%         \begin{overlayarea}{\textwidth}{50pt}
+%             \begin{itemize}
+%                 \only<1>{\item This is a PEG with a degenerate loop:
+%                     \begin{align*}
+%                         \Rule{A}{\PRepetition{\PEmpty}}
+%                     \end{align*}}
+%                 \only<2>{\item Empty $\PEmpty$ is WF.}
+%                 \only<3>{\item Empty $\PEmpty$ is nullable, so $\PRepetition{\PEmpty}$ is \emph{not} WF.}
+%                 \only<4>{\item Fixed point reached.
+%                 \item Not all subexpressions are WF, so the grammar is \emph{not} WF.}
+%             \end{itemize}
+%         \end{overlayarea}
+%     \end{center}
+% \end{frame}
 
 \begin{frame}{\lpeg{}}
     \begin{columns}
