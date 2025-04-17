@@ -44,6 +44,9 @@
 
 \tikzset{
     wf/.style={temporal={#1{}{color=orange}{color=cyan}}},
+    nonnullable/.style={temporal={#1{}{color=orange,cornerlabel={$1$}}{color=cyan,cornerlabel={$1$}}}},
+    nullable/.style={temporal={#1{}{color=orange,cornerlabel={$0$}}{color=cyan,cornerlabel={$0$}}}},
+    cornerlabel/.style={label={[font=\tiny,color=blue,fill=blue!20,draw=blue]right:#1}},
     ill/.style={temporal={#1{}{color=magenta}{color=red}}},
     visit/.style={temporal={#1{}{color=green}{}}},
     temporal/.code args={<#1>#2#3#4}{%
@@ -359,14 +362,50 @@
     \end{itemize}
 \end{frame}
 
+\begin{frame}{Left-Recursive Rule Check}
+    \begin{itemize}
+        \item \lpeg{} symbolically parses each rule until:
+        \begin{itemize}
+            \item it is guaranteed to have consumed a character $\to$ non-nullable
+            \item it finishes the pattern without consuming a character $\to$ nullable
+            \item it is guaranteed to have visited a rule twice $\to$ left-recursive
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Nullable vs. Non-Nullable Patterns}
+    \begin{itemize}
+        \item The \emph{nullable} property is a conservative approximation
+        \item Meanwhile, the \emph{non-nullable} property guarantees that...
+        \begin{align*}
+            & \text{$G \vdash e$ is non-nullable} \\
+            & \implies \\
+            & \nexists s,\ \FordMatch{G}{e}{s}{s}
+        \end{align*}
+        \item Examples:
+        \begin{itemize}
+            \item $\PEmpty$ is nullable
+            \item $\PRepetition{e}$ is nullable
+            \item $\PAnd{e}$ is nullable
+            \item Terminals are non-nullable
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
 \begin{frame}{Degenerate Loops}
     \begin{align*}
-        & \FordMatch{G}{e}{s}{s} \\
+        & \FordMatch{G}{e}{s}{s} & \text{($G \vdash e$ is nullable)} \\
         & \implies \\
         & \nexists res,\ \FordMatch{G}{\PRepetition{e}}{s}{res} \\
         & \implies \\
         & \text{$G \vdash \PRepetition{e}$ is incomplete}
     \end{align*}
+\end{frame}
+
+\begin{frame}{Degenerate Loops Check}
+    \begin{itemize}
+        \item Looks for a repetition $\PRepetition{e}$, where $e$ is nullable
+    \end{itemize}
     \begin{itemize}
         \item Examples:
         \begin{itemize}
@@ -378,62 +417,62 @@
     \end{itemize}
 \end{frame}
 
-\begin{frame}{Well-formed Grammar Example}
+\begin{frame}{Well-formed Grammar (LR Check)}
     \begin{center}
         \begin{tikzpicture}%
             [level distance=8mm, every node/.style={rectangle,draw}]
-            \node[wf=<6>] (A) {A}
+            \node[nullable=<6>] (A) {A}
                 child {
-                    node[wf=<5>] {/}
+                    node[nullable=<5>] {/}
                     child {
-                        node[wf=<3>] {;}
-                            child { node[wf=<2>] {a} }
+                        node[nonnullable=<3>] {;}
+                            child { node[nonnullable=<2>] {a} }
                             child { node {;}
                                 child { node {A} }
                                 child { node {b} }
                             }
                     }
-                    child { node[wf=<4>] {$\PEmpty$} }
+                    child { node[nullable=<4>] {$\PEmpty$} }
                 } ;
-            \node[right=30mm of A, wf=<7>] (B) {B}
+            \node[right=30mm of A, nullable=<7>] (B) {B}
                 child {
-                    node[wf=<7>] {/}
+                    node[nullable=<7>] {/}
                     child {
-                        node[wf=<7>] {;}
-                            child { node[wf=<7>] {b} }
+                        node[nonnullable=<7>] {;}
+                            child { node[nonnullable=<7>] {b} }
                             child { node {;}
                                 child { node {B} }
                                 child { node {c} }
                             }
                     }
-                    child { node[wf=<7>] {$\PEmpty$} }
+                    child { node[nullable=<7>] {$\PEmpty$} }
                 } ;
-            \node[right=30mm of B, wf=<21>] {D}
+            \node[right=30mm of B, nullable=<21>] {D}
                 child [sibling distance=20mm] {
-                    node[wf=<20>] {;}
+                    node[nullable=<20>] {;}
                     child {
-                        node[wf=<12>] {$\&$}
+                        node[nullable=<12>] {$\&$}
                         child [sibling distance=10mm] {
-                            node[wf=<11>] {;}
-                            child { node[wf=<8>] {A} }
+                            node[nullable=<11>] {;}
+                            child { node[nullable=<8>] {A} }
                             child {
-                                node[wf=<10>] {!}
-                                child { node[wf=<9>] {b} }
+                                node[nullable=<10>] {!}
+                                child { node[nonnullable=<9>] {b} }
                             }
                         }
                     }
                     child {
-                        node[wf=<19>] {;}
+                        node[nullable=<19>] {;}
                         child [sibling distance=10mm] {
-                            node[wf=<14>] {$*$}
-                            child { node[wf=<13>] {a} }
+                            node[nullable=<14>] {$*$}
+                            child { node[nonnullable=<13>] {a} }
                         }
                         child [sibling distance=20mm] {
-                            node[wf=<18>] {;}
-                            child [sibling distance=10mm] { node[wf=<15>] {B} }
+                            node[nullable=<18>] {;}
+                            child [sibling distance=10mm] { node[nullable=<15>] {B} }
                             child [sibling distance=10mm] {
-                                node[wf=<17>] {!}
-                                child { node[wf=<16>] {.} }
+                                node[nullable=<17>] {!}
+                                child { node[nonnullable=<16>] {.} }
                             }
                         }
                     }
@@ -470,7 +509,7 @@
     \end{center}
 \end{frame}
 
-\begin{frame}{Well-formed Grammar Example}
+\begin{frame}{Well-formed Grammar (DL Check)}
     \begin{center}
         \begin{tikzpicture}%
             [level distance=8mm, every node/.style={rectangle,draw}]
@@ -565,7 +604,7 @@
     \end{center}
 \end{frame}
 
-\begin{frame}{Not Well-Formed Grammar Example \#1}
+\begin{frame}{Not Well-Formed Grammar \#1 (LR Check)}
     \begin{center}
         \begin{tikzpicture}%
             [level distance=8mm, every node/.style={rectangle,draw}]
@@ -596,7 +635,7 @@
     \end{center}
 \end{frame}
 
-\begin{frame}{Not Well-Formed Grammar Example \#2}
+\begin{frame}{Not Well-Formed Grammar \#2 (LR Check)}
     \begin{center}
         \begin{tikzpicture}%
             [level distance=8mm, every node/.style={rectangle,draw}]
@@ -623,7 +662,7 @@
     \end{center}
 \end{frame}
 
-\begin{frame}{Not Well-Formed Grammar Example \#2}
+\begin{frame}{Not Well-Formed Grammar \#2 (DL Check)}
     \begin{center}
         \begin{tikzpicture}%
             [level distance=8mm, every node/.style={rectangle,draw}]
