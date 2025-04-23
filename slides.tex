@@ -639,10 +639,10 @@
     \begin{center}
         \begin{tikzpicture}%
             [level distance=8mm, every node/.style={rectangle,draw}]
-            \node[visit={<2>}, wf=<7>] (A) {A}
+            \node[visit={<2>}, nullable=<7>] (A) {A}
                 child {
-                    node[visit={<3>}, wf=<6>] {$*$}
-                    child { node[visit={<4>}, wf=<5>] {$\PEmpty$} }
+                    node[visit={<3>}, nullable=<6>] {$*$}
+                    child { node[visit={<4>}, nullable=<5>] {$\PEmpty$} }
                 } ;
         \end{tikzpicture}
 
