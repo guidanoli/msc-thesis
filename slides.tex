@@ -404,10 +404,10 @@
 
 \begin{frame}{Degenerate Loops Check}
     \begin{itemize}
-        \item Looks for a repetition $\PRepetition{e}$, where $e$ is nullable
+        \item For every repetition $\PRepetition{e}$, make sure $e$ is non-nullable
     \end{itemize}
     \begin{itemize}
-        \item Examples:
+        \item Examples of degenerate loops:
         \begin{itemize}
             \item $\PRepetition{\PEmpty}$
             \item $\PRepetition{(\POptional{e})}$
