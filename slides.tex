@@ -109,7 +109,7 @@
         \item not-predicates $\PNot{e}$
         \item and-predicates $\PAnd{e}$
         \item sequences $\PSequence{e_1}{e_2}$
-        \item prioritized choices $\PChoice{e_1}{e_2}$
+        \item prioritized choices $e_1/e_2$
     \end{itemize}
 \end{frame}
 
@@ -757,7 +757,7 @@
             & \wedge (first(e_1) \cap first(e_2) = \EmptySet{}) \\
             & \wedge (\neg empty(e_1)) \\
             & \implies \\
-            & \PChoice{e_1}{e_2} \equiv \PAnd{\PSet{first(e_1)}}e_1/\PNot{\PSet{first(e_1)}}e_2
+            & e_1/e_2\ \equiv\ \PChoice{\PAnd{\PSet{first(e_1)}}e_1}{\PNot{\PSet{first(e_1)}}e_2}
         \end{align*}
     \end{itemize}
 \end{frame}
@@ -768,7 +768,7 @@
         \item \cite{koprowski_trx_2011} and \emph{well-formed} XPEGs in Coq
         \item \cite{ribeiro_towards_2019} and \emph{well-typed} PEGs in Agda
         \item \cite{blaudeau_verified_2020} and their verified PEG parser in PVS
-        \item We are unaware of any previous work on first-set of PEGs
+        \item We are unaware of any previous work on first sets of PEGs
     \end{itemize}
 \end{frame}
 
@@ -777,7 +777,7 @@
         \item We formalized two algorithms from \lpeg{}:
         \begin{itemize}
             \item the well-formedness check;
-            \item and the first-set computation.
+            \item the first-set computation.
         \end{itemize}
         \item We proved their termination and correctness
         \item We identified opportunities for improvements in \lpeg{}
