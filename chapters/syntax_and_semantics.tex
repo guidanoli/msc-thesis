@@ -146,39 +146,17 @@ Take, for example, the pattern $\PRepetition{\PEmpty}$,
 which matches $\PEmpty$ as many times as possible.
 The repetition body $\PEmpty$ always matches and consumes no input,
 so the match never makes any progress and gets stuck in an infinite loop.
-This happens for any repetition whose body
-may match a string while consuming no input.
-\begin{align*}
-    \forall g, \forall s, \Matches{g}{p}{s}{s} \implies
-    \nexists res, \Matches{g}{\PRepetition{p}}{s}{res}
-\end{align*}
 
-Some grammar rules can also be incomplete,
-which we will demonstrate by showing how repetitions
-can be reduced to recursive grammar rules.
-Given a repetition pattern $\PRepetition{p}$,
-we can rewrite it as the non-terminal pattern $\PNT{i}$
-in a grammar whose $i^{th}$ rule is defined as
-$\PChoice{\PSequence{p}{\PNT{i}}}{\PEmpty}$.
-If $\PRepetition{p}$ is incomplete,
-then its reduction to a recursive grammar rules is also incomplete,
-even if $p$ contains no repetitions.
-This demonstrates that some grammar rules can be
-intrinsically incomplete, even when free of repetitions.
-This happens when rules reference themselves
-(directly or indirectly) while consuming no input in-between.
-We call these left-recursive rules.
-The simplest example of such a rule is
-one whose body is a non-terminal pattern that references
-the rule itself.
-\begin{align*}
-    \forall g, \forall i, g[i] = \Some \PNT{i} \implies
-    \nexists res, \Matches{g}{\PNT{i}}{s}{res}
-\end{align*}
+Some grammar rules can also be incomplete
+if they reference themselves
+while consuming no input in-between.
+These are so-called left-recursive rules.
+The simplest example of such a rule is $\Rule{\PNT{i}}{\PNT{i}}$.
+We will get into greater detail about them later in this chapter.
 
-As briefly displayed in the reduction of repetitions
-into recursive grammar rules,
-we can chain patterns together
+Besides making repetitions of patterns
+and referencing rules,
+we can also chain patterns together
 with the sequence operator.
 For example,
 the pattern $\PSequence{\PRepetition{\PSet{ab}}}{\PSet{y}}$
