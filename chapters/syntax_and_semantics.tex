@@ -7,6 +7,7 @@ with several useful constructions
 for practical language description purposes:
 literal strings (e.g. ``abc''),
 character classes (e.g. $\PRange{a}{z}$), any character ($\PDot{}$),
+non-terminals,
 optionals $\POptional{p}$, zero-or-more repetitions $\PRepetition{p}$,
 one-or-more repetitions $\PPlus{p}$, not-predicates $\PNot{p}$,
 and-predicates $\PAnd{p}$, sequences $\PSequence{p_1}{p_2}$,
@@ -52,6 +53,8 @@ Moreover, we decided to keep and-predicates $\PAnd{p}$
 to stay more loyal to the implementation of \lpeg{},
 which doesn't treat $\PAnd{p}$ as syntactic sugar for $\PNot{(\PNot{p})}$
 and handles them differently in the first-set algorithm.
+We also denote non-terminals by $\PNT{i}$,
+where $i$ is the index of the rule in the grammar.
 Our desugared syntax is depicted in \Cref{fig:syntax}.
 \begin{figure}[t]
     \centering
