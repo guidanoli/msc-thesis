@@ -1,9 +1,25 @@
 \section{Correctness}
 
+Having introduced each step of the well-formedness algorithm,
+we can now present the definition of the \textit{\verifygrammarname{}} function,
+which implements the algorithm step-by-step.
+It starts by checking whether the grammar defines a first rule,
+and whether every rule in the grammar is coherent.
+It then makes sure the grammar contains no left-recurive rules,
+and no degenerate loops, in this order.
+\Cref{fig:verifygrammar-function} displays the function.
+\begin{figure}
+    \centering
+    \input{verifygrammarcomp}
+    \caption{The well-formedness function with gas.}
+    \label{fig:verifygrammar-function}
+\end{figure}
+
 Now, let us prove that the well-formedness check is correct.
-To do so, we first need to define an
+To do so, we first define an
 inductive predicate equivalent to
-the \textit{\verifygrammarname{}} function.
+the \textit{\verifygrammarname{}} function
+to help us in proofs by induction.
 \Cref{fig:verifygrammar}
 presents this predicate,
 \begin{figure}

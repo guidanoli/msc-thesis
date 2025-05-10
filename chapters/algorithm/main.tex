@@ -5,40 +5,34 @@ In this chapter,
 we present the well-formedness algorithm
 implemented in \lpeg{}
 and prove its correctness.
-We start with the overall structure
-of the algorithm.
-\Cref{fig:verifygrammar-function}
-displays the function that implements the algorithm,
-which can be seen as a sequence of four steps,
-each of which we will get into later.
-\begin{figure}
-    \centering
-    \input{verifygrammarcomp}
-    \caption{The well-formedness function with gas.}
-    \label{fig:verifygrammar-function}
-\end{figure}
-The function \textit{\verifygrammarname{}}
-takes a grammar and some gas as parameters,
+We begin by introducing the signature
+of the function \textit{\verifygrammarname{}},
+which implements the well-formedness algorithm in Coq:
+it takes a grammar $g$ and a natural number $gas$ as parameters
 and returns an optional Boolean value.
-The gas counter serves merely to convince Coq
-that the function terminates for any input.
-If this counter ever reaches zero,
-the function returns $\None$.
+The parameter $gas$ is decremented on every recursive call,
+in order to convince Coq that the function terminates for every input.
+If this parameter ever reaches zero,
+the function returns $\None$,
+signaling it ran out of gas.
 Otherwise, it returns $\Some b$,
 where the Boolean value $b$
 indicates whether the grammar
 is well-formed or not.
 
-We prove that,
+We proved in Coq that,
 for any input grammar $g$,
-there exists a lower bound for the gas counter
+there exists a lower bound for the parameter $gas$
 for which \textit{\verifygrammarname{}} returns $\Some b$.
 We do not need to assume anything
 about the grammar, because the function
-performs all the necessary checks
-in the correct order.
+performs all the necessary checks.
 This works as a proof of termination
 for the algorithm.
+In practice, this results allows
+\lpeg{} to implement this function in~C
+without the gas parameter,
+as it is not necessary.
 \begin{lemma}
     \label{lemma:verifygrammar-termination}
     $\forall gas \ge \verifygrammargas{g}$,
@@ -66,18 +60,17 @@ With this lower bound,
 we can define the function \textit{wf},
 which takes a grammar $g$ and returns a Boolean value
 indicating whether $g$ is well-formed.
-\Cref{fig:wf} displays the implementation
-of the function \textit{wf}.
 It basically calls \textit{\verifygrammarname{}}
-with $\verifygrammargas{g}$ as the gas counter.
-If it returns $\Some b$, we simply return $b$.
-Otherwise, we return $true$.
-This default value is irrelevant,
-because this case cannot happen.
+with the gas lower bound.
+If \textit{\verifygrammarname{}} returns $\Some b$,
+then \textit{wf} returns $b$.
+If, otherwise, \textit{\verifygrammarname{}} returns $\None$,
+then \textit{wf} returns $true$.
+This last case is irrelevant, because we know it cannot happen.
 Nevertheless, we return $true$
 to demonstrate that the function
 and gas estimation are correct.
-
+\Cref{fig:wf} displays the function \textit{wf}.
 \begin{figure}
     \centering
     \input{wf}
@@ -85,57 +78,44 @@ and gas estimation are correct.
     \label{fig:wf}
 \end{figure}
 
-Now that we have defined \textit{wf},
-let us get into \textit{\verifygrammarname{}}.
-In \Cref{fig:verifygrammar-function},
-the reader may observe that
-it calls four functions that we have not defined yet.
+Let us now get into the function \textit{\verifygrammarname{}},
+which is divided into four steps.
+Each step is implemented by a different function.
 The first two functions,
-\textit{\coherentname{}} and \textit{\lcoherentname{}},
-do not use the gas counter,
-because they operate recursively on the structure of patterns
+named \textit{\coherentname{}} and \textit{\lcoherentname{}},
+do not receive a gas parameter,
+as they are defined recursively on the structure of patterns
 and lists of patterns, respectively.
-This type of structural recursion is enough for Coq
-to determine that these functions terminate.
+This structural recursion is enough to convince Coq
+that these functions terminate.
 Meanwhile, the last two functions,
-\textit{\lverifyrulename{}} and \textit{\lcheckloopsname{}},
-need to visit rules recursively,
-and are, therefore, defined recursively on a gas parameter.
-Just like we did for
-the \textit{\verifygrammarname{}} function,
-we also prove that \textit{\lverifyrulename{}} and \textit{\lcheckloopsname{}}
-terminate by providing a lower bound for the gas parameter.
-(Without these proofs,
-we would not be able to prove the termination
-of \textit{\verifygrammarname{}}.)
+named \textit{\lverifyrulename{}} and \textit{\lcheckloopsname{}},
+receive a gas parameter,
+as their recursion goes beyond the structure of patterns,
+and involves visiting arbitrary grammar rules.
+Therefore, in order to prove that \textit{\verifygrammarname{}} terminates,
+we need to provide lower bounds for the gas parameter of both
+\textit{\lverifyrulename{}} and \textit{\lcheckloopsname{}}.
 
-Regarding the implementation of these functions,
-we will get into each of them in the following sections.
-For now, we will briefly explain what each of them does.
+The implementation of these functions
+will be discussed in the following sections.
+For now, let us briefly go over them.
 The first two steps are relatively simple,
 while the third and fourth steps are more complex,
 as they involve symbolically parsing each rule.
 
 The first step of the algorithm is trivial.
-It merely ensures that $\PNT{0}$,
+It merely ensures the existence of
 the first rule of the grammar,
-is defined,
 given that it is used as the starting point
 for parsing the grammar.
-We implement this step with the function
-\textit{\coherentname{}},
-which takes a grammar $g$ and a pattern $p$
-and returns a Boolean value
-that indicates whether $p$ only references rules
-that exist in $g$.
 
 The second step is similar to the first one,
 as it makes sure that every rule in the grammar
 only references rules that exist in the grammar.
 This ensures that we can safely
 dereference any nonterminal patterns later on.
-This step is implemented by the function \textit{\lcoherentname{}},
-which is an extended version of \textit{\coherentname{}}
+This step is an extended version of the previous one
 for lists of patterns.
 
 The third step
@@ -145,23 +125,12 @@ It does so by symbolically executing the parsing routine
 for each rule in the grammar
 and checking whether it can reach the same rule twice
 without consuming any input.
-This step is implemented by the function \textit{\lverifyrulename{}},
-which takes a grammar $g$, a list of rules $rs$, and a gas counter
-and returns an optional Boolean value
-indicating whether all rules in the list $rs$
-are not left-recursive.
 
 The fourth and final step
-looks for any degenerate loops,
+makes sure that the grammar contains
+no degenerate loops,
 which are repetitions of patterns
 that may match while consuming no input.
-This step is implemented by the function \textit{\lcheckloopsname{}},
-and uses a simpler version
-of the algorithm from the previous step.
-It takes a grammar $g$, a list of rules $rs$, and a gas counter
-and returns an optional Boolean value
-indicating whether all rules in the list $rs$
-are free of degenerate loops.
 
 If a grammar passes all these checks,
 then it is considered well-formed.
