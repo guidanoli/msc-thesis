@@ -133,9 +133,11 @@ though it doesn't affect the algorithm.
 As we will soon see, it is either appended, passed along, or ignored.
 It works as a trace of the inner workings of the function,
 a high-level concept we only use for proving lemmas about this algorithm.
-\lpeg{} also implements this output, but it is only used in error messages.
+\lpeg{} also implements this output, but it is only used
+when formatting error messages about left-recursive rules.
 
-We now describe the algorithm,
+We now describe the algorithm
+for detecting left-recursive rules,
 starting with its inputs and outputs.
 It receives a pattern, a grammar, and a stack depth limit,
 and returns a label and a stack.
@@ -147,6 +149,11 @@ $\None$ (stack overflow error);
 and stacks by either
 $nil$ (an empty stack) or
 $i :: k$ (a rule of index $i$ concatenated with a stack $k$).
+For now, we will work with this signature,
+but beware that the actual function,
+displayed in \Cref{fig:vr-function},
+receives an extra parameter
+which we will introduce later in this section.
 
 The function is defined recursively.
 In most cases, it calls itself for each sub-pattern.
