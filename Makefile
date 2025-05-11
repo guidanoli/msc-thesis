@@ -1,7 +1,13 @@
-all: slides.pdf
+PDFLATEX = pdflatex -interaction nonstopmode
+BIBTEX = bibtex
+PROJECTS = main slides
 
-%.pdf: %.tex
-	pdflatex $<
-	bibtex $(patsubst %.tex,%,$<)
-	pdflatex $<
-	pdflatex $<
+all: $(PROJECTS)
+
+$(PROJECTS):
+	@$(PDFLATEX) $@
+	@$(BIBTEX) $@
+	@$(PDFLATEX) $@
+	@$(PDFLATEX) $@
+
+.PHONY: $(PROJECTS)
