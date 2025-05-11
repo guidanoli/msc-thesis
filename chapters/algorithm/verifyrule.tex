@@ -68,13 +68,16 @@ One possible way to detect left-recursive rules
 is through a set of visited rules,
 which is checked and updated
 every time a nonterminal pattern is visited.
-Constant time complexity
-can be achieved
-by using data structures
-such as hash tables.
+For a grammar with $n$ rules,
+this set could be implemented
+as an array of $n$ Boolean values,
+each representing a rule.
+This method achieves
+a computation and spatial
+completity of $O(n)$.
 
 Another approach,
-which doesn't involve complex data structures,
+which is simpler and takes less memory space,
 uses a counter of visited rules,
 which starts at zero
 and gets incremented every time a rule is visited.
