@@ -55,6 +55,22 @@ as the number of nodes in its abstract syntax tree,
 and the size of a grammar $g$
 as the summation of the sizes of its rules,
 that is, $\sum_{r \in g} \size{r}$.
+One neat property about grammar rules is
+that they are always smaller than the grammar themselves,
+as displayed in \Cref{lemma:size-of-r-le-size-of-g}.
+This property follows from the definition of grammar sizes,
+and from the fact that pattern sizes are non-negative.
+\begin{lemma}
+    \label{lemma:size-of-r-le-size-of-g}
+    $\forall r \in g$, $\size{r} \le \size{g}$.
+\end{lemma}
+
+At this point,
+it can be hard to explain the rationale behind this equation,
+as we haven't discussed each step in-depth yet.
+We will therefore leave the explanation for this lower bound
+to \Cref{section:lr-rules},
+when we introduce the left recursion check.
 
 With this lower bound,
 we can define the function \textit{wf},

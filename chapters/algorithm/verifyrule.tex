@@ -349,9 +349,9 @@ there exists a lower bound for the gas parameter,
 for which the function returns $\Some (res, k)$.
 The lower bound
 takes into account
-the size of the pattern,
-the size of the grammar,
-and the stack depth limit.
+the size of the pattern $\size{p}$,
+the size of the grammar $\size{g}$,
+and the stack depth limit $d$.
 
 \begin{lemma}%[Verify Rule Termination]
     If $\Coherent{g}{p}{true}$,
@@ -360,6 +360,15 @@ and the stack depth limit.
     $\exists res\ \exists k\ \verifyrulecomp{g}{p}{d}{nb}{gas} = \Some (res, k)$.
     \label{lemma:vr-termination}
 \end{lemma}
+
+\begin{proof}
+    For most patterns,
+    the proof follows from induction on $p$.
+    Meanwhile, for non-terminal patterns,
+    the proof follows from induction on $d$,
+    and from \Cref{lemma:size-of-r-le-size-of-g},
+    plus some arithmetic manipulation.
+\end{proof}
 
 Now, we would like to
 prove that the function
@@ -678,8 +687,9 @@ are free of left recursion.
 
 This new function provides values
 for two of the parameters of the underlying function:
-the stack depth limit, with the lower bound from \Cref{lemma:stack-depth-convergence},
-and the nullable accumulator, initialized with $false$.
+the stack depth limit $d$, initialized with $\length{g}+1$,
+the lower bound from \Cref{lemma:stack-depth-convergence},
+and the nullable accumulator $nb$, initialized with $false$.
 We could have omitted the gas counter,
 by providing the lower bound from \Cref{lemma:vr-termination},
 but we decided to postpone
@@ -693,12 +703,26 @@ and the list of rules $rs$ are coherent,
 because they could be different.
 In practice, however,
 they will be the same.
+In this case,
+where $rs = g$,
+the equation for the lower bound can be simplified
+to $(\length{g} + 2) \cdot \size{g}$.
+That is the origin of the lower bound of the
+\textit{\verifygrammarname{}} function
+as displayed in \Cref{fig:verifygrammargas}.
 
 \begin{lemma}%[Verify Rules Termination]
     If $\lCoherent{g}{g}{true}$ and $\lCoherent{g}{rs}{true}$, \\
-    then, $\forall g \ge \size{rs} + (\length{g} + 1) \cdot \size{g}$,
+    then, $\forall gas \ge \size{rs} + (\length{g} + 1) \cdot \size{g}$,
     $\exists res\ \lverifyrulecomp{g}{rs}{gas} = \Some res$.
 \end{lemma}
+
+\begin{proof}
+    The proof follows by induction on the list of rules $rs$,
+    and from the gas lower bound for the function \textit{\verifyrulename{}}
+    from \Cref{lemma:vr-termination},
+    substituting the stack depth limit $d$ with $\length{g}+1$.
+\end{proof}
 
 We will use this function for
 verifying that the grammar contains
