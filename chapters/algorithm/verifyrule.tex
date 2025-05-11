@@ -373,11 +373,18 @@ and the stack depth limit $d$.
 
 \begin{proof}
     For most patterns,
-    the proof follows from induction on $p$.
+    the proof follows from induction on the pattern $p$.
     Meanwhile, for non-terminal patterns,
-    the proof follows from induction on $d$,
-    and from \Cref{lemma:size-of-r-le-size-of-g},
-    plus some arithmetic manipulation.
+    the proof follows from induction on the stack depth limit $d$.
+    We show below how the lower bound for a rule $r$ and stack depth limit $d$
+    is derived from a non-terminal $\PNT{i}$ that references $r$ and stack depth limit $d+1$.
+    We use \Cref{lemma:size-of-r-le-size-of-g} to show that $\size{g} \ge \size{r}$.
+    \begin{align*}
+        gas & \ge \size{\PNT{i}} + (d + 1) \cdot \size{g} \\
+        & \ge 1 + (d + 1) \cdot \size{g} \\
+        & \ge 1 + \size{g} + d \cdot \size{g} \\
+        & \ge 1 + \size{r} + d \cdot \size{g}
+    \end{align*}
 \end{proof}
 
 Now, we would like to
