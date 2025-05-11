@@ -10,6 +10,10 @@ as a conservative approximation to completeness.
 In this approximation,
 he defined the conservative notion of \emph{nullable} expressions,
 which can accept an input string without consuming any characters.
+Ford's well-formedness algorithm
+is the main source of inspiration for \lpeg{}'s well-formedness algorithm.
+However, we did not prove whether they are equivalent.
+This would require formalizing Ford's algorithm in Coq.
 
 Medeiros et al.~\cite{medeiros_left_2014}
 presented a conservative extension to the semantics of PEGs
