@@ -147,12 +147,12 @@ but any character set could be used.
 \end{align*}
 
 Let us now define the first-set of the other pattern types.
-Starting with the choice pattern $\PChoice{p_1}{p_2}$,
+Starting with the choice pattern $p_1/p_2$,
 we intuitively define it as the union
 of the first-sets of $p_1$ and $p_2$,
 passing down the follow-set parameter to each sub-call.
 \begin{align*}
-    \firstb{\PChoice{p_1}{p_2}}{follow} &=
+    \firstb{p_1/p_2}{follow} &=
     \SetUnion{\firstb{p_1}{follow}}{\firstb{p_2}{follow}}
 \end{align*}
 
@@ -205,11 +205,12 @@ as the intersection of both sets.
 
 One subtle difference between this definition
 and the actual implementation of the algorithm in \lpeg{} is
-the follow-set of $p$.
+the follow-set parameter used to calculate the first-set of $p$.
 While \lpeg{} simply passes along the follow-set parameter,
 we provide the full character set $\Sigma$.
 This change was necessary for us to prove the
-key property of first-sets in Coq.
+key property of first-sets in Coq,
+which we will show later in this chapter.
 Future research may check whether
 passing along the follow-set parameter
 is incorrect, equivalent, or even better

@@ -149,6 +149,18 @@ and $s'$ either is empty or starts with $x \in follow$, \\
 then $s$ either is empty or starts with $y \in first$.
 \end{lemma}
 
+In the case of the and-predicate pattern $\PAnd{p}$,
+we noticed that it would be easier to prove this lemma
+if we passed $\Sigma$ as the follow-set of $p$.
+That is because $\PAnd{p}$ matches when $p$ matches,
+but $p$ leaves an unconsumed suffix $s'$ that is
+discarded and whose starting character (if non-empty)
+we know nothing about. Ultimately, we cannot say that $s'$
+is either empty or starts with a character in
+an arbitrary follow-set. Instead, we use $\Sigma$
+as the follow-set of $p$, as this turns
+this hypothesis into a tautology.
+
 Finally, we prove the key property of first-sets:
 For a well-formed PEG,
 if the emptiness value is $false$,
