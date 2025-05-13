@@ -50,9 +50,14 @@ as character sets can be reduced into choices of characters.
 However, in our case, we prefer character sets as they allow us to
 simplify the definition of the first-set algorithm.
 Moreover, we decided to keep and-predicates $\PAnd{p}$
+and repetitions $\PRepetition{p}$
 to stay more loyal to the implementation of \lpeg{},
-which doesn't treat $\PAnd{p}$ as syntactic sugar for $\PNot{(\PNot{p})}$
-and handles them differently in the first-set algorithm.
+which doesn't translate $\PAnd{p}$ into $\PNot{(\PNot{p})}$
+and $\PRepetition{p}$ into $\Rule{A}{pA/\PEmpty{}}$,
+handling them differently in the first-set algorithm.
+\lpeg{} keeps $\PAnd{p}$ and $\PRepetition{p}$ patterns
+because they lead to smaller and more efficient virtual machine code,
+when compared to their desugared equivalents.
 We also denote non-terminals by $\PNT{i}$,
 where $i$ is the index of the rule in the grammar.
 Our desugared syntax is depicted in \Cref{fig:syntax}.
