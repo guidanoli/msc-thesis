@@ -1,6 +1,12 @@
 \section{Formal definition}
 
 \Cref{fig:firstcomp} presents
+\begin{figure}
+    \centering
+    \input{firstcomp}
+    \caption{The first-set function.}
+    \label{fig:firstcomp}
+\end{figure}
 the formal definition of the first-set algorithm.
 It takes a grammar, a pattern, a follow-set,
 and some gas, and returns an optional tuple.
@@ -20,14 +26,8 @@ accumulator that should be initialized with
 the full character set $\Sigma$.
 In order to improve the legibility
 of the function for sequence and choice patterns,
-we also define the auxiliary functions $\otimes$ and $\oplus$,
-respectively.
-\begin{figure}
-    \centering
-    \input{firstcomp}
-    \caption{The first-set function.}
-    \label{fig:firstcomp}
-\end{figure}
+we also define
+in \Cref{fig:firstaux}
 \begin{figure}
     \centering
     \input{firstotimes}
@@ -35,6 +35,8 @@ respectively.
     \caption{The auxiliary $\otimes$ and $\oplus$ functions.}
     \label{fig:firstaux}
 \end{figure}
+the auxiliary functions $\otimes$ and $\oplus$,
+respectively.
 
 Having formally defined the first-set algorithm,
 we now prove its key properties.

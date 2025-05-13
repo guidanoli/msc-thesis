@@ -26,6 +26,12 @@ repetition patterns and predicate patterns,
 because they are all nullable.
 
 In \Cref{fig:nullable-function},
+\begin{figure}[ht!]
+    \centering
+    \input{nullablecomp}
+    \caption{The nullable function.}
+    \label{fig:nullable-function}
+\end{figure}
 we define this simpler version as a fixed-point,
 which takes a grammar,
 a pattern, a stack depth limit, and a gas counter,
@@ -67,13 +73,6 @@ the grammar contains no left-recursive rules,
 and the output stack was only used for proofs,
 which we will be able to reuse from \Cref{section:lr-rules}.
 
-\begin{figure}
-    \centering
-    \input{nullablecomp}
-    \caption{The nullable function.}
-    \label{fig:nullable-function}
-\end{figure}
-
 Just as we did for the function from \Cref{section:lr-rules},
 we prove that this simpler version is also
 monotonic
@@ -105,15 +104,14 @@ with respect to the stack depth limit.
 However, in order to do that,
 we found it better to first define an equivalent inductive predicate.
 \Cref{fig:nullable-predicate} defines the predicate
-$\Nullable{g}{p}{d}{res}$ which takes a grammar $g$,
-a pattern $p$, a stack depth limit $d$, and returns a label $res$.
-
 \begin{figure}
     \centering
     \input{nullable}
     \caption{The nullable predicate.}
     \label{fig:nullable-predicate}
 \end{figure}
+$\Nullable{g}{p}{d}{res}$ which takes a grammar $g$,
+a pattern $p$, a stack depth limit $d$, and returns a label $res$.
 
 About this predicate, we proved some basic lemmas.
 First, we proved that it is deterministic.

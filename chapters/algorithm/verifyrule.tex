@@ -152,6 +152,12 @@ $i :: k$ (a rule of index $i$ concatenated with a stack $k$).
 For now, we will work with this signature,
 but beware that the actual function,
 displayed in \Cref{fig:vr-function},
+\begin{figure}
+    \centering
+    \input{verifyrulecomp}
+    \caption{The left recursion detection function.}
+    \label{fig:vr-function}
+\end{figure}
 receives an extra parameter
 which we will introduce later in this section.
 
@@ -268,14 +274,13 @@ either $\Some true$ or $\Some false$,
 we return instead $\Some (true \vee nb)$ and $\Some (false \vee nb)$,
 which get simplified to $\Some true$ and $\Some nb$, respectively.
 \Cref{fig:evalchoice} shows a Coq-like pseudocode of how choice patterns
-are evaluated with the Boolean parameter $nb$.
-
 \begin{figure}
     \centering
     \input{evalchoice}
     \caption{Pseudocode of the evaluation of choice patterns.}
     \label{fig:evalchoice}
 \end{figure}
+are evaluated with the Boolean parameter $nb$.
 
 We would also like to highlight
 how this nullable accumulator allows
@@ -313,12 +318,6 @@ the function also returns $\None$.
 In all other cases,
 the function returns $\Some (res, k)$,
 with $res$ being a label, and $k$, a stack.
-\begin{figure}
-    \centering
-    \input{verifyrulecomp}
-    \caption{The left recursion detection function.}
-    \label{fig:vr-function}
-\end{figure}
 
 At this point,
 the reader should be warned that
@@ -434,6 +433,11 @@ than the fixed-point definition,
 as it would be easier to perform proofs by induction,
 and without having to deal with a gas parameter.
 \Cref{fig:verifyrule}
+\begin{figure}[ht!]
+    \input{verifyrule}
+    \caption{The left recursion detection predicate.}
+    \label{fig:verifyrule}
+\end{figure}
 defines such predicate,
 denoted as $\VerifyRule{g}{p}{d}{nb}{res}{k}$.
 It takes a grammar $g$,
@@ -442,12 +446,6 @@ a stack depth limit $d$,
 and a nullable accumulator $nb$,
 and outputs a result $res$,
 and a stack trace $k$.
-
-\begin{figure}
-    \input{verifyrule}
-    \caption{The left recursion detection predicate.}
-    \label{fig:verifyrule}
-\end{figure}
 
 In order to reach our final goal
 of proving that the label returned
@@ -713,18 +711,17 @@ that checks if a pattern is free of left recursion,
 we now use this definition to create a function
 that performs this check for a list of patterns.
 \Cref{fig:lverifyrule-function} defines this function,
-which receives a grammar, a list of patterns,
-and a gas counter,
-and returns an optional Boolean value
-indicating whether all patterns in the grammar
-are free of left recursion.
-
 \begin{figure}
     \centering
     \input{lverifyrulecomp}
     \caption{The left recursion detection function for lists of patterns.}
     \label{fig:lverifyrule-function}
 \end{figure}
+which receives a grammar, a list of patterns,
+and a gas counter,
+and returns an optional Boolean value
+indicating whether all patterns in the grammar
+are free of left recursion.
 
 This new function provides values
 for two of the parameters of the underlying function:
@@ -772,16 +769,15 @@ since it's implemented as a list of rules.
 Since we will also be using it in our proofs,
 we will need an analogous inductive definition.
 \Cref{fig:lverifyrule} defines this predicate,
-which also receives a grammar and a list of patterns,
-and yields a Boolean value indicating
-whether all patterns in the list are free of left recursion.
-
 \begin{figure}
     \centering
     \input{lverifyrule}
     \caption{The left recursion detection predicate for lists of patterns.}
     \label{fig:lverifyrule}
 \end{figure}
+which also receives a grammar and a list of patterns,
+and yields a Boolean value indicating
+whether all patterns in the list are free of left recursion.
 
 This predicate differs from the function in one aspect.
 While the function provides an exact value for the

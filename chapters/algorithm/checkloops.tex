@@ -11,6 +11,12 @@ we use the algorithm from
 \Cref{section:nullable}.
 
 \Cref{fig:checkloops-function}
+\begin{figure}
+    \centering
+    \input{checkloopscomp}
+    \caption{The degenerate loop detection function.}
+    \label{fig:checkloops-function}
+\end{figure}
 defines this step of the verification process
 as a fixed-point,
 which takes a grammar,
@@ -34,13 +40,6 @@ However, as we've discussed in \Cref{section:nullable},
 actual implementations can safely drop this parameter,
 given that the grammar has been checked
 for left-recursive rules already.
-
-\begin{figure}
-    \centering
-    \input{checkloopscomp}
-    \caption{The degenerate loop detection function.}
-    \label{fig:checkloops-function}
-\end{figure}
 
 Just as with the other gas-based functions,
 we would like to prove that this function
@@ -78,18 +77,17 @@ However, in order to do that,
 it is better to work with
 an inductively-defined predicate.
 \Cref{fig:checkloops} shows
-the predicate we have defined.
-It takes a grammar,
-a pattern,
-and a stack depth limit,
-and returns an optional Boolean value.
-
 \begin{figure}
     \centering
     \input{checkloops}
     \caption{The degenerate loop detection predicate.}
     \label{fig:checkloops}
 \end{figure}
+the predicate we have defined.
+It takes a grammar,
+a pattern,
+and a stack depth limit,
+and returns an optional Boolean value.
 
 As usual, we first prove
 some basic lemmas about the predicate.
@@ -154,19 +152,18 @@ that performs this check for a list of patterns.
 Naturally, we will be using this
 function to check all the rules of a grammar.
 \Cref{fig:lcheckloops-function}
-displays this function,
-which takes a grammar, a list of patterns, and a gas counter,
-and returns an optional Boolean value,
-indicating whether it has found any degenerate loop.
-We pass $\length{g}+1$ as
-the stack depth limit to the underlying function.
-
 \begin{figure}
     \centering
     \input{lcheckloopscomp}
     \caption{The degenerate loop detection function for lists of patterns.}
     \label{fig:lcheckloops-function}
 \end{figure}
+displays this function,
+which takes a grammar, a list of patterns, and a gas counter,
+and returns an optional Boolean value,
+indicating whether it has found any degenerate loop.
+We pass $\length{g}+1$ as
+the stack depth limit to the underlying function.
 
 We prove that there is a lower bound for the gas counter
 for which this function returns some result,
@@ -193,17 +190,16 @@ and to help us in later induction proofs,
 we also define an equivalent inductive predicate
 for this list-based degenerate loop checker.
 \Cref{fig:lcheckloops} displays this predicate,
-which takes a grammar and a list of patterns,
-and returns a Boolean value, indicating
-whether none of the patterns in the list
-contain a degenerate loop.
-
 \begin{figure}
     \centering
     \input{lcheckloops}
     \caption{The degenerate loop detection predicate for lists of patterns.}
     \label{fig:lcheckloops}
 \end{figure}
+which takes a grammar and a list of patterns,
+and returns a Boolean value, indicating
+whether none of the patterns in the list
+contain a degenerate loop.
 
 As usual, we prove some basic lemmas
 about this predicate.
