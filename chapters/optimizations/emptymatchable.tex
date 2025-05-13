@@ -32,16 +32,16 @@ Therefore, the value for this pattern is $false$.
 For the not-predicate pattern $\PNot{p}$,
 \lpeg{} is rather conservative,
 always returning $true$.
-However, we believe there is a way
-to make the emptiness value
-not a conservative approximation
-but an exact representation of whether
-the pattern matches the empty string:
-The function could call itself recursively for $p$
-and negate its emptiness value.
+In fact, this seems to be
+the only case making the emptiness value
+a conservative approximation.
+If instead this function were to call itself
+recursively for $p$ and negate its emptiness value,
+we would effectively compute whether
+the pattern matches the empty string.
 However, the cases of $\PNot{p}$
-in which $p$ matches the empty string
-are not useful in practice.
+where $p$ matches the empty string
+are not common nor useful in practice.
 
 The and-predicate pattern $\PAnd{p}$
 and the non-terminal pattern $\PNT{i}$
@@ -67,7 +67,7 @@ Meanwhile, when $p_1$ is nullable,
 the emptiness value of both $p_1$ and $p_2$ are computed,
 and their Boolean \scand{} is calculated normally.
 
-Finally, the case of the choice pattern $\PChoice{p_1}{p_2}$
+Finally, the case of the choice pattern $p_1/p_2$
 is similar to that of the sequence pattern,
 but instead of a Boolean \scand{} operation,
 it performs a Boolean \scor{}
