@@ -30,7 +30,7 @@ proposed by Ford~\cite{ford_parsing_2004},
 which makes two assumptions.
 The first one is that $\PNot{p}$ may match,
 and the second one is that,
-in the case of $\PChoice{p_1}{p_2}$,
+in the case of $p_1/p_2$,
 it may visit $p_2$,
 without checking whether $p_1$ always matches.
 For illustrative purposes,
@@ -40,19 +40,27 @@ for each assumption.
 A counterexample for the first assumption
 is the pattern $\PNot{\PEmpty}$,
 which never matches.
-Meanwhile, the second assumption doesn't hold
-for the pattern $\PChoice{\PEmpty}{p_2}$,
+Meanwhile, for the second assumption,
+a simple counterexample is the pattern $\PEmpty/p_2$,
 because $\PEmpty$ always matches,
 and, therefore, $p_2$ is never visited.
-The reader might think that
-these cases can be easily spotted,
-by the simplicity of the counterexamples.
+By the simplicity of the counterexamples,
+the reader might think that
+these cases can be easily spotted.
 However,
 Ford~\cite{ford_parsing_2004} proved that
-the general case of this problem is undecidable.
+the general case of this problem is undecidable:
+If there were such an algorithm,
+then you could determine whether
+the language of two arbitrary patterns $p_1$ and $p_2$
+have a non-empty intersection,
+which is a knownly undecidable problem,
+by running this hypothetical algorithm
+for the pattern $\PNot{p_1}\PAnd{p_2}$.
 
-One of the conditions for the algorithm to yield a result
-is whenever it consumes some input.
+One of the conditions for our algorithm
+to yield a result is when it visits a pattern
+that is guaranteed to consume some input.
 As a result,
 it exclusively visits patterns that may be reached
 without consuming any input.
