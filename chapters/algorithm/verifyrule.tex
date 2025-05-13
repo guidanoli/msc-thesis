@@ -334,23 +334,44 @@ once we introduce all steps of the verification process.
 In this section,
 we will simply prove
 that the label returned by the function
-converges with respect to the gas counter and stack depth limit.
+is monotonic and eventually constant
+with respect to the gas counter and stack depth limit.
+
+A function $f$ is said to be monotonically increasing
+if, for any $x$ and $y$, such that $x \le y$,
+it is always true that $f(x) \le f(y)$.
+In the case of the \textit{\verifyrulename{}} function,
+this will be true for the gas counter and stack depth limit parameters,
+and the order between optionals is $\None < \Some res$, for any $res$.
+This means that, if the function ever returns $\Some res$,
+increasing the gas counter or the stack depth limit
+will not alter the return value.
+
+A function $f$ is eventually constant
+if, for some $N$ and for any $x$ and $y$,
+such that $x, y \ge N$,
+it is true that $f(x) = f(y)$.
+In the case of \textit{\verifyrulename{}} function,
+this will be true for the gas counter and stack depth limit parameters
+and for the label return value.
+This means that both the gas counter and stack depth limit
+have lower bounds for which the returned label stabilizes.
 
 About this fixed-point definition,
 we will initially prove some basic lemmas.
-Starting with \Cref{lemma:vr-gas-convergence},
+Starting with \Cref{lemma:vr-gas-monotonicity},
 we state that, if the function returns $\Some (res, k)$,
 then increasing the value of the gas parameter
 will not change the result.
 This is what we mean by
-the function converging
+the function being monotonic and eventually constant
 with respect to the gas counter.
 
-\begin{lemma}%[Verify Rule Gas Convergence]
+\begin{lemma}%[Verify Rule Gas Eventual Constancy]
     If $\verifyrulecomp{g}{p}{d}{nb}{gas} = \Some (res, k)$, \\
     then $\forall gas' \ge gas$,
     $\verifyrulecomp{g}{p}{d}{nb}{gas'} = \Some (res, k)$.
-    \label{lemma:vr-gas-convergence}
+    \label{lemma:vr-gas-monotonicity}
 \end{lemma}
 
 \Cref{lemma:vr-termination} states that,
@@ -388,12 +409,10 @@ and the stack depth limit $d$.
 \end{proof}
 
 Now, we would like to
-prove that the function
-converges with respect to the
-stack depth limit,
-although in a somewhat unconventional
-sense of the word.
-That is because,
+prove that the label returned by the \textit{\verifyrulename{}} function
+is monotonic and eventually constant with respect to the
+stack depth limit.
+We discard the returned stack in this context because,
 in the case of left-recursive rules,
 the stack returned by the function will,
 in fact,
@@ -402,8 +421,11 @@ However, we are not interested in
 the output stack, in this case.
 What really matters to the following
 steps of the verification process
-is that the label returned by the algorithm converges
-with respect to the stack depth limit.
+is the label.
+In particular, we would like to make sure
+that no rule in the grammar is marked
+with the label $\None$,
+meaning ``stack overflow''.
 
 In order to prove such lemma,
 we realized an inductive, gasless predicate
@@ -428,7 +450,9 @@ and a stack trace $k$.
 \end{figure}
 
 In order to reach our final goal
-of proving that the function converges
+of proving that the label returned
+by the \textit{\verifyrulename{}} function
+is monotonic and eventually constant
 with respect to the stack depth limit,
 we need to first prove some intermediary lemmas.
 First, we need to relate the predicate and
@@ -461,7 +485,7 @@ can be inductively constructed using the predicate definition.
     \label{lemma:vr-follows}
 \end{lemma}
 
-\Cref{lemma:stack-depth-convergence-not-lr-pattern} shows that,
+\Cref{lemma:stack-depth-monotonicity-not-lr-pattern} shows that,
 if a pattern evaluates to either nullable or non-nullable,
 then increasing the stack depth limit
 doesn't affect the result.
@@ -474,7 +498,7 @@ by transitivity.
 \begin{lemma}%[Stack Depth Limit Increase without Overflow]
     If $\VerifyRule{g}{p}{d}{nb}{\Some nb'}{k}$, \\
     then $\forall d' \ge d, \VerifyRule{g}{p}{d'}{nb}{\Some nb'}{k}$.
-    \label{lemma:stack-depth-convergence-not-lr-pattern}
+    \label{lemma:stack-depth-monotonicity-not-lr-pattern}
 \end{lemma}
 
 \Cref{lemma:stack-depth-lr-pattern} shows that,
@@ -646,7 +670,7 @@ and both conditions will still hold true.
 
 Finally, we present the main lemma
 that we wanted to prove.
-\Cref{lemma:stack-depth-convergence}
+\Cref{lemma:stack-depth-eventual-constancy}
 shows that,
 if an evaluation with a stack depth limit
 greater than the number of grammar rules
@@ -663,13 +687,13 @@ left-recursive rules.
     then, for any $d' \ge d$,
     $\exists k'$,
     such that $\VerifyRule{g}{p}{d'}{nb}{res}{k'}$.
-    \label{lemma:stack-depth-convergence}
+    \label{lemma:stack-depth-eventual-constancy}
 \end{lemma}
 
 We now explain the proof of this lemma.
 For the cases in which the evaluation
 does not result in a stack overflow,
-the proof follows from \Cref{lemma:stack-depth-convergence-not-lr-pattern}.
+the proof follows from \Cref{lemma:stack-depth-monotonicity-not-lr-pattern}.
 Now, in the case of a stack overflow,
 we know from \Cref{lemma:stack-depth-lr-pattern}
 that the length of the stack $k$ is equal to the stack depth limit $d$,
@@ -705,7 +729,7 @@ are free of left recursion.
 This new function provides values
 for two of the parameters of the underlying function:
 the stack depth limit $d$, initialized with $\length{g}+1$,
-the lower bound from \Cref{lemma:stack-depth-convergence},
+the lower bound from \Cref{lemma:stack-depth-eventual-constancy},
 and the nullable accumulator $nb$, initialized with $false$.
 We could have omitted the gas counter,
 by providing the lower bound from \Cref{lemma:vr-termination},
@@ -763,8 +787,8 @@ This predicate differs from the function in one aspect.
 While the function provides an exact value for the
 stack depth limit, the predicate allows any stack depth limit
 to identify a pattern as either nullable or non-nullable.
-That is because, according to \Cref{lemma:stack-depth-convergence-not-lr-pattern},
-the predicate instantly converges with the stack depth limit in such cases.
+That is because, according to \Cref{lemma:stack-depth-monotonicity-not-lr-pattern},
+the returned label stays constant with increasing stack depth limits in such cases.
 In the general case, however,
 a stack depth limit greater than
 the number of rules in the grammar

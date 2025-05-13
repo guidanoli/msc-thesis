@@ -75,20 +75,21 @@ which we will be able to reuse from \Cref{section:lr-rules}.
 \end{figure}
 
 Just as we did for the function from \Cref{section:lr-rules},
-we prove that this simpler version also converges
+we prove that this simpler version is also
+monotonic
 with respect to the gas counter.
 
-\begin{lemma}%[Nullable Gas Convergence]
+\begin{lemma}%[Nullable Gas Monotonicity]
     If $\nullablecomp{g}{p}{d}{gas} = \Some res$, \\
     then, $\forall gas' \ge gas$,
     $\nullablecomp{g}{p}{d}{gas'} = \Some res$.
-    \label{lemma:nullable-gas-convergence}
+    \label{lemma:nullable-gas-monotonicity}
 \end{lemma}
 
-Besides that, we also give a lower bound
-for the gas counter for which the function
-returns some result
-for any coherent pattern and grammar.
+Besides that, we also prove the function
+is eventually constant with respect to the gas counter
+by giving a gas lower bound for which the function
+returns some result for any coherent pattern and grammar.
 
 \begin{lemma}%[Nullable Termination]
     If $\Coherent{g}{p}{true}$,
@@ -99,7 +100,8 @@ for any coherent pattern and grammar.
 \end{lemma}
 
 Furthermore, we would also like to prove that
-this function converges with respect to the stack depth limit.
+this function is eventually constant and monotonic
+with respect to the stack depth limit.
 However, in order to do that,
 we found it better to first define an equivalent inductive predicate.
 \Cref{fig:nullable-predicate} defines the predicate
@@ -175,12 +177,13 @@ to denote this relation.
     then $\ProperSuffix{s'}{s}$.
 \end{lemma}
 
-Finally, we show that the predicate converges
+Finally, we show that the predicate is
+eventually constant
 with respect to the stack depth limit,
 past a lower bound given by the number of rules in the grammar,
 denoted as $\length{g}$.
 
-\begin{lemma}%[Nullable Stack Depth Limit Convergence]
+\begin{lemma}%[Nullable Stack Depth Limit Eventual Constancy]
     If $\Coherent{g}{p}{true}$,
     and $\lCoherent{g}{g}{true}$,
     and $\lVerifyRule{g}{g}{true}$, \\

@@ -44,17 +44,17 @@ for left-recursive rules already.
 
 Just as with the other gas-based functions,
 we would like to prove that this function
-converges with respect to the gas counter.
-\Cref{lemma:checkloops-gas-convergence}
+is monotonic with respect to the gas counter.
+\Cref{lemma:checkloops-gas-monotonicity}
 states that, if this function returns some label,
 then increasing the gas counter
-won't change the label being returned.
+won't change the returned label.
 
-\begin{lemma}%[Check Loops Gas Convergence]
+\begin{lemma}%[Check Loops Gas Monotonicity]
     If $\checkloopscomp{g}{p}{d}{gas} = \Some res$, \\
     then, $\forall gas' \ge gas$,
     $\checkloopscomp{g}{p}{d}{gas'} = \Some res$.
-    \label{lemma:checkloops-gas-convergence}
+    \label{lemma:checkloops-gas-monotonicity}
 \end{lemma}
 
 Moreover, \Cref{lemma:checkloops-termination}
@@ -71,7 +71,8 @@ for which the function returns some result.
 \end{lemma}
 
 We would also like to prove that
-this function converges with
+this function is monotonic and
+eventually constant with
 respect to the stack depth limit.
 However, in order to do that,
 it is better to work with
@@ -129,21 +130,21 @@ will not alter the result.
     \label{lemma:checkloops-d-increase-no-overflow}
 \end{lemma}
 
-Finally, \Cref{lemma:checkloops-d-convergence}
+Finally, \Cref{lemma:checkloops-d-eventual-constancy}
 states that, for any coherent pattern and grammar
 without left-recursive rules,
-the label returned by the predicate converges
+the label returned by the predicate is constant
 when the stack depth limit is greater than
 the number of rules in the grammar.
 
-\begin{lemma}%[Check Loops Stack Depth Limit Convergence]
+\begin{lemma}%[Check Loops Stack Depth Limit Eventual Constancy]
     If $\Coherent{g}{p}{true}$,
     and $\lCoherent{g}{g}{true}$,
     and $\lVerifyRule{g}{g}{true}$, \\
     and $\CheckLoops{g}{p}{d}{res}$,
     where $d > \length{g}$,
     then, $\forall d' \ge d, \CheckLoops{g}{p}{d'}{res}$.
-    \label{lemma:checkloops-d-convergence}
+    \label{lemma:checkloops-d-eventual-constancy}
 \end{lemma}
 
 Having defined the algorithm
