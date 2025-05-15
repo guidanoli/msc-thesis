@@ -1030,31 +1030,37 @@
 \newcommand{\puc@coverprogram}{Programa de
   Pós--graduação em \puc@program, do Departamento de \puc@department{} da \puc@uni}
 
+\newcommand{\puc@coverprogramuk}{Programa de
+  Pós--graduação em \puc@program, do Departamento de \puc@department{} of \puc@uni}
+
 \newcommand{\puc@juryprogram}{Programa de
   Pós--graduação em \puc@program{} da \puc@uni}
+
+\newcommand{\puc@juryprogramuk}{Programa de
+  Pós--graduação em \puc@program{} of \puc@uni}
 
 \newcommand{\puc@coverpresentedforphd}{Tese apresentada como requisito
   parcial para obtenção do grau de Doutor pelo \puc@coverprogram.}
 
-\newcommand{\puc@coverpresentedforphduk}{Thesis presented to the \puc@coverprogram{} in
+\newcommand{\puc@coverpresentedforphduk}{Thesis presented to the \puc@coverprogramuk{} in
   partial fulfillment of the requirements for the degree of Doutor em \puc@program.}
 
 \newcommand{\puc@coverpresentedformsc}{Dissertação apresentada como requisito
   parcial para obtenção do grau de Mestre pelo \puc@coverprogram.}
 
-\newcommand{\puc@coverpresentedformscuk}{Thesis presented to the \puc@coverprogram{} in
+\newcommand{\puc@coverpresentedformscuk}{Dissertation presented to the \puc@coverprogramuk{} in
   partial fulfillment of the requirements for the degree of Mestre em \puc@program.}
 
 \newcommand{\puc@jurypresentedforphd}{Tese apresentada como requisito
   parcial para obtenção do grau de Doutor pelo \puc@juryprogram.}
 
-\newcommand{\puc@jurypresentedforphduk}{Thesis presented to the \puc@juryprogram{} in
+\newcommand{\puc@jurypresentedforphduk}{Thesis presented to the \puc@juryprogramuk{} in
   partial fulfillment of the requirements for the degree of Doutor em \puc@program.}
 
 \newcommand{\puc@jurypresentedformsc}{Dissertação apresentada como requisito
   parcial para obtenção do grau de Mestre pelo \puc@juryprogram.}
 
-\newcommand{\puc@jurypresentedformscuk}{Thesis presented to the \puc@juryprogram{} in
+\newcommand{\puc@jurypresentedformscuk}{Dissertation presented to the \puc@juryprogramuk{} in
   partial fulfillment of the requirements for the degree of Mestre em \puc@program.}
 
 \newcommand{\puc@showfront}{%
